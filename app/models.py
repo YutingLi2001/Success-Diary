@@ -1,7 +1,35 @@
 from datetime import date
+from typing import Optional
+import uuid
+from sqlalchemy import Column, String
+from sqlalchemy.orm import declarative_base
 from sqlmodel import SQLModel, Field
+from fastapi_users import schemas
+from fastapi_users.db import SQLAlchemyBaseUserTableUUID
+
+Base = declarative_base()
+
+class User(SQLAlchemyBaseUserTableUUID, Base):
+    __tablename__ = "user"
+    
+    display_name: Optional[str] = Column(String(100), nullable=True)
+    timezone: Optional[str] = Column(String(50), nullable=True, default="UTC")
+
+class UserRead(schemas.BaseUser[uuid.UUID]):
+    display_name: Optional[str]
+    timezone: Optional[str]
+
+class UserCreate(schemas.BaseUserCreate):
+    display_name: Optional[str] = None
+    timezone: Optional[str] = "UTC"
+
+class UserUpdate(schemas.BaseUserUpdate):
+    display_name: Optional[str] = None
+    timezone: Optional[str] = None
 
 class Entry(SQLModel, table=True):
+    __tablename__ = "entry"
+    
     id: int | None = Field(default=None, primary_key=True)
     user_id: str
     entry_date: date

@@ -18,7 +18,22 @@ A web application for tracking daily successes and achievements.
 - Install Node dependencies: `npm install`
 
 ### Running the Application
-- Start development server: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+
+**🚀 Automated Scripts (Recommended):**
+1. Navigate to project: `cd "C:\Users\Yuting\Projects\success-diary"`
+2. Run: `scripts\dev-start.bat` (full setup) or `scripts\quick-start.bat` (quick start)
+3. Open browser: Visit http://localhost:8000
+
+**📋 Manual Commands (Alternative):**
+1. Navigate to project: `cd "C:\Users\Yuting\Projects\success-diary"`
+2. Activate virtual environment: `venv\Scripts\activate`
+3. Install dependencies (if needed): `pip install -r requirements.txt`
+4. Start development server: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+5. Open browser: Visit http://localhost:8000
+
+**🛠️ Additional Scripts:**
+- Reset database: `scripts\reset-db.bat`
+- Install dependencies: `scripts\install-deps.bat`
 - Build CSS (if needed): `npm run build` (when you add npm scripts)
 
 ### Database
@@ -34,17 +49,20 @@ A web application for tracking daily successes and achievements.
 - `app/` - Python application code
 - `templates/` - HTML templates
 - `static/css/` - CSS files
+- `scripts/` - Development automation scripts (dev-start.bat, quick-start.bat, etc.)
 - `Project Documentations/` - Project documentation and planning
 - `db.sqlite3` - SQLite database
 
 ## Current Status
-✅ **Working MVP Completed (as of 2025-07-13)**
+✅ **Working MVP + Authentication System (as of 2025-07-13)**
 - Full 11-field daily entry form (3 successes, 3 gratitudes, 3 worries, 1 rating)
 - Human-centered UX with optional fields (only first field required in each category)
 - Beautiful emoji bullet display (✨🙏💭) for entries
+- User authentication system with email verification (FastAPI-Users + Mailtrap)
 - SQLite database with proper nullable field support
 - Responsive Tailwind CSS styling
 - Form validation and error handling
+- Development automation scripts in `scripts/` folder
 
 ## Key Features Implemented
 - **Daily Entry Form**: Complete with encouraging placeholders and visual cues
