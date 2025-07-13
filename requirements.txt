@@ -1,0 +1,6 @@
+fastapi==0.110.1
+uvicorn==0.34.3
+jinja2==3.1.3
+sqlmodel==0.0.24
+fastapi-users==14.0.1
+python-multipart

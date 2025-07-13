@@ -6,12 +6,12 @@ class Entry(SQLModel, table=True):
     user_id: str
     entry_date: date
     success_1: str
-    success_2: str
-    success_3: str
+    success_2: str | None = Field(default=None)
+    success_3: str | None = Field(default=None)
     gratitude_1: str
-    gratitude_2: str
-    gratitude_3: str
+    gratitude_2: str | None = Field(default=None)
+    gratitude_3: str | None = Field(default=None)
     anxiety_1: str
-    anxiety_2: str
-    anxiety_3: str
+    anxiety_2: str | None = Field(default=None)
+    anxiety_3: str | None = Field(default=None)
     score: int

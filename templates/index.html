@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SuccessDiary</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+</head>
+<body class="max-w-3xl mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-4">SuccessDiary – β</h1>
+
+  <form method="post" action="/add" class="grid gap-4 mb-6">
+    <!-- Success Section -->
+    <div class="space-y-2">
+      <h3 class="font-semibold text-green-700">Today's Successes <span class="text-sm font-normal text-green-600">(at least one)</span></h3>
+      <input name="success_1" placeholder="✨ What went well today? (required)" class="border-2 border-green-300 p-2 w-full rounded focus:border-green-500" required />
+      <input name="success_2" placeholder="Any other wins or progress? (optional)" class="border border-green-200 p-2 w-full rounded text-gray-600 focus:border-green-400" />
+      <input name="success_3" placeholder="One more success to celebrate? (optional)" class="border border-green-200 p-2 w-full rounded text-gray-600 focus:border-green-400" />
+    </div>
+
+    <!-- Gratitude Section -->
+    <div class="space-y-2">
+      <h3 class="font-semibold text-blue-700">Today's Gratitude <span class="text-sm font-normal text-blue-600">(at least one)</span></h3>
+      <input name="gratitude_1" placeholder="🙏 What are you grateful for today? (required)" class="border-2 border-blue-300 p-2 w-full rounded focus:border-blue-500" required />
+      <input name="gratitude_2" placeholder="Something else that brought you joy? (optional)" class="border border-blue-200 p-2 w-full rounded text-gray-600 focus:border-blue-400" />
+      <input name="gratitude_3" placeholder="One more thing to appreciate? (optional)" class="border border-blue-200 p-2 w-full rounded text-gray-600 focus:border-blue-400" />
+    </div>
+
+    <!-- Anxiety Section -->
+    <div class="space-y-2">
+      <h3 class="font-semibold text-red-700">Today's Worries <span class="text-sm font-normal text-red-600">(at least one)</span></h3>
+      <input name="anxiety_1" placeholder="💭 What's on your mind? Any concerns? (required)" class="border-2 border-red-300 p-2 w-full rounded focus:border-red-500" required />
+      <input name="anxiety_2" placeholder="Any other stress or challenges? (optional)" class="border border-red-200 p-2 w-full rounded text-gray-600 focus:border-red-400" />
+      <input name="anxiety_3" placeholder="Anything else worth noting? (optional)" class="border border-red-200 p-2 w-full rounded text-gray-600 focus:border-red-400" />
+    </div>
+
+    <!-- Self Rating -->
+    <div class="space-y-2">
+      <label for="score" class="font-semibold text-purple-700">Overall Day Rating (1-5)</label>
+      <input name="score" type="number" min="1" max="5" value="3" class="border p-2 w-full rounded" required />
+    </div>
+
+    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold">Save Entry</button>
+  </form>
+
+  <h2 class="font-semibold mb-2">Recent Entries</h2>
+  <div class="space-y-3">
+    {% for e in entries %}
+      <div class="border p-4 rounded bg-gray-50">
+        <div class="flex justify-between items-center mb-2">
+          <span class="font-semibold">{{ e.entry_date }}</span>
+          <span class="text-sm bg-purple-100 px-2 py-1 rounded">Rating: {{ e.score }}/5</span>
+        </div>
+        <div class="grid gap-3 text-sm">
+          <div>
+            <div class="font-medium text-green-700 mb-1">Successes:</div>
+            <div class="ml-2 space-y-1">
+              <div>✨ {{ e.success_1 }}</div>
+              {% if e.success_2 %}<div>✨ {{ e.success_2 }}</div>{% endif %}
+              {% if e.success_3 %}<div>✨ {{ e.success_3 }}</div>{% endif %}
+            </div>
+          </div>
+          <div>
+            <div class="font-medium text-blue-700 mb-1">Gratitude:</div>
+            <div class="ml-2 space-y-1">
+              <div>🙏 {{ e.gratitude_1 }}</div>
+              {% if e.gratitude_2 %}<div>🙏 {{ e.gratitude_2 }}</div>{% endif %}
+              {% if e.gratitude_3 %}<div>🙏 {{ e.gratitude_3 }}</div>{% endif %}
+            </div>
+          </div>
+          <div>
+            <div class="font-medium text-red-700 mb-1">Worries:</div>
+            <div class="ml-2 space-y-1">
+              <div>💭 {{ e.anxiety_1 }}</div>
+              {% if e.anxiety_2 %}<div>💭 {{ e.anxiety_2 }}</div>{% endif %}
+              {% if e.anxiety_3 %}<div>💭 {{ e.anxiety_3 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="text-gray-500 text-center py-8">No entries yet. Start by creating your first entry above!</div>
+    {% endfor %}
+  </div>
+</body>
+</html>

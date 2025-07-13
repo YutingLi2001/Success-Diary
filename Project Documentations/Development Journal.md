@@ -1,53 +1,71 @@
-**2025-06-09 Development Journal**
+## 2025-06-09 – Dev Log #1: Project Foundation
 
-**Progress (Project Initiation)**
+### Progress
+- Created core project documents:
+  - `Project Vision`: defined users, value, and philosophy
+  - `MVP Scope`: feature priorities using MoSCoW
+  - `Success Metrics & Timeline`: 10-week Gantt chart
+  - `Tech Stack Decision`: finalized core technologies
 
-* Finalized and committed the core project documents:
+### Insight
+- Good planning clarified MVP boundaries and reduced ambiguity.
 
-  1. **Project Vision** – Defined target users, value proposition, and product philosophy.
-  2. **MVP Scope** – Outlined Must/Should/Could/Won’t features using MoSCoW.
-* Established the success metrics and 10-week Gantt timeline in **Success Metrics & Timeline**.
-* Recorded tech-stack decisions in **Tech Stack Decision** document.
+### Next Steps
+- Finalize tech stack
+- Scaffold initial project structure
 
-**Progress (Understanding of the Project)**
+## 2025-06-10 – Dev Log #2: Project Setup
 
-* Gained clarity on the product’s north star: a lightweight, data-driven daily journal with motivational feedback loops.
-* Solidified the boundary between MVP essentials and future enhancements.
-* Learned that good planning is just as important as good executing
+### Progress
+- Set up Python virtual environment and installed FastAPI, SQLModel, Uvicorn
+- Initialized Node environment with Tailwind CSS, PostCSS, Autoprefixer
+- Verified HTMX + Tailwind rendering at `http://127.0.0.1:8000`
+- Added `.gitignore` and committed clean project skeleton
 
+### Learnings
+- HTMX simplifies dynamic interfaces without full SPA overhead
+- Frontend build artifacts should remain isolated from Python logic
 
-**Next To-Dos**
+### Questions
+- What is the long-term role of the virtual environment?
+- How should the folder structure be organized?
 
-1. Decide on tech stack choice.
+### Next Steps
+- Define `Entry` model in `models.py`
+- Integrate Alembic and create initial migration
+- Build `POST /api/entry` endpoint with HTMX form
+- Add `requirements.txt` and NPM scripts
+- Improve folder layout and module separation
 
----
+### Reflection
+- Development felt too passive; aim for deeper understanding moving forward
 
-**2025-06-10 Development Journal**
+## 2025-07-13 – Dev Log #3: Claude Code Integration & UX Refinement
 
-**Progress (Project Setup)**
+### Progress
+- Switched coding partner from ChatGPT to Claude Code 
+- Fixed runtime bugs (missing `date`, template path errors, missing dependencies)
+- Completed 11-field `Entry` form with optional fields and form validation
+- Updated schema to support nullable fields with SQLModel
+- Removed non-English text and standardized language for international use
 
-* Created Python virtual environment and installed FastAPI, SQLModel, Uvicorn, and related packages.
-* Initialized Node environment, installed Tailwind CSS, PostCSS, and Autoprefixer; configured local build with `npx tailwindcss init -p`.
-* Verified HTMX + Tailwind integration by running `uvicorn app.main:app --reload` and `npm run dev:css`, successfully rendering the first UI at `http://127.0.0.1:8000`.
-* Added a comprehensive `.gitignore` to exclude `.venv/`, `node_modules/`, and `db.sqlite3`; committed project skeleton and docs.
+### UX Refinement
+- Made fields 2 and 3 optional in each section to reduce user pressure
+- Added visual indicators for required vs optional fields
+- Reworded field labels for softer, more approachable tone
 
-**Progress (Understanding of Development)**
+### Technical Learnings
+- Google Chrome actually has a terminal for debugging in F12
 
-* Learned how HTMX simplifies dynamic page updates without a full SPA framework.
-* Understood the importance of isolating front-end build artifacts from the Python environment.
+### Current Status
+- Refined UX and complete documentation
 
-**Questions**
+### Next Steps
+- ==Re-plan all existing projects – including timeline, scope, and priorities==
+- More testing and improvement on existing UI and functionalities
+- Introducing User authentication
 
-* What are we using this virtual environement for?
-* How should I organize the folder structure? 
+### Reflection
+Today marks a major shift in my development workflow — I've started using Claude Code as my primary coding partner instead of ChatGPT. The experience is remarkably powerful. I believe this could be a turning point.
 
-**Next To-Dos**
-
-1. Define the `Entry` data model in `models.py` with all required fields.
-2. Integrate Alembic for database migrations and generate the initial migration script.
-3. Implement the `POST /api/entry` endpoint and hook it up via HTMX for in-page updates.
-4. Create `requirements.txt` and add npm scripts (`dev:css`, `build:css`) to `package.json`.
-
-**Personal Reflection**
-
-> Today’s development feels like copy & pasting from ChatGPT, I need to think harder and learn more.
+It's prompted me to reassess my role as a human developer. Rather than focusing solely on improving traditional programming skills, I now feel a stronger urge to master how to collaborate effectively with AI agents.
