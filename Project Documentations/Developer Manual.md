@@ -13,26 +13,41 @@
 
 ### 🚀 **Automated Scripts (Recommended)**
 
-**Full Development Setup:**
+**Windows - Full Development Setup:**
 ```bash
 # Double-click or run in Command Prompt:
-scripts\dev-start.bat
+scripts\windows\dev-start.bat
+```
+*This script: activates venv → installs dependencies → resets database → starts server*
+
+**Mac - Full Development Setup:**
+```bash
+# Run in Terminal:
+./scripts/mac/dev-start.sh
 ```
 *This script: activates venv → installs dependencies → resets database → starts server*
 
 **Quick Start (No DB Reset):**
 ```bash
-scripts\quick-start.bat
+# Windows:
+scripts\windows\quick-start.bat
+
+# Mac:
+./scripts/mac/quick-start.sh
 ```
-*This script: activates venv → starts server*
 
 **Other Useful Scripts:**
 ```bash
-scripts\reset-db.bat        # Reset database only
-scripts\install-deps.bat    # Install/update dependencies only
+# Windows:
+scripts\windows\reset-db.bat        # Reset database only
+scripts\windows\install-deps.bat    # Install/update dependencies only
+
+# Mac:
+./scripts/mac/reset-db.sh           # Reset database only
+./scripts/mac/install-deps.sh       # Install/update dependencies only
 ```
 
-**📁 Note:** All automation scripts are located in the `scripts/` folder to keep the project root clean.
+**📁 Note:** Scripts are organized by platform in `scripts/windows/` and `scripts/mac/` folders for cross-platform development.
 
 ### 📋 **Manual Commands (Alternative)**
 
@@ -68,10 +83,10 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ## Development Workflow
 
 ### 🎯 **Recommended Daily Workflow**
-1. **Start development**: Run `scripts\dev-start.bat` (full setup) or `scripts\quick-start.bat` (quick start)
+1. **Start development**: Run `scripts\windows\dev-start.bat` (full setup) or `scripts\windows\quick-start.bat` (quick start)
 2. **Make code changes**: Edit files as needed
 3. **Test changes**: Server auto-reloads on file changes
-4. **Database schema changes**: If you modify `models.py`, run `scripts\reset-db.bat` then restart server
+4. **Database schema changes**: If you modify `models.py`, run `scripts\windows\reset-db.bat` then restart server
 
 ### 🔧 **Manual Workflow (Alternative)**
 1. **Always activate virtual environment first**: `venv\Scripts\activate`
@@ -115,16 +130,16 @@ class Entry(SQLModel, table=True):
     success_1: str
     success_2: Optional[str] = None  # Now optional
 
-# Action needed: Run scripts\reset-db.bat and restart server
+# Action needed: Run scripts\windows\reset-db.bat and restart server
 ```
 
 ## Automation Scripts
 
 ### 📁 **Available Scripts** (Located in `scripts/` folder)
-- **`scripts\dev-start.bat`**: Complete development setup (recommended for daily use)
-- **`scripts\quick-start.bat`**: Quick server start (when no DB changes)
-- **`scripts\reset-db.bat`**: Reset database only (with smart error handling)
-- **`scripts\install-deps.bat`**: Install/update dependencies only
+- **`scripts\windows\dev-start.bat`**: Complete development setup (recommended for daily use)
+- **`scripts\windows\quick-start.bat`**: Quick server start (when no DB changes)
+- **`scripts\windows\reset-db.bat`**: Reset database only (with smart error handling)
+- **`scripts\windows\install-deps.bat`**: Install/update dependencies only
 
 ### 🛠️ **Script Features**
 - **Error checking**: Verifies project directory and virtual environment
@@ -158,13 +173,13 @@ class Entry(SQLModel, table=True):
 
 **Error**: Database schema mismatch
 ```bash
-# Quick solution: Run scripts\reset-db.bat then scripts\quick-start.bat
+# Quick solution: Run scripts\windows\reset-db.bat then scripts\windows\quick-start.bat
 # Or manual: del db.sqlite3 then restart application
 ```
 
 **Error**: Application crashes after form submission
 - **Likely cause**: Schema mismatch between models and database
-- **Quick solution**: Run `scripts\reset-db.bat` and restart server
+- **Quick solution**: Run `scripts\windows\reset-db.bat` and restart server
 - **Manual solution**: Delete `db.sqlite3` and restart application
 
 ### Frontend Issues

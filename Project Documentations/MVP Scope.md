@@ -6,14 +6,25 @@
 
 ## Must (Essential for Initial Launch)
 
-| Feature                                | Description                                                                                                                                                |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **User Registration / Login / Logout** | Basic authentication system supporting email/password and OAuth (e.g., GitHub or Google). All user data is securely isolated.                              |
-| **Daily Entry**                        | Users complete a structured entry each day including:<br>- 3 success highlights<br>- 3 gratitude points<br>- 3 sources of anxiety<br>- A self-rating (1–5) |
-| **Edit Historical Entries**            | Users can view and revise entries from any date, enabling reflection and continuity.                                                                       |
-| **Data Import / Export**               | Full export of user data (JSON/CSV), and support for importing past backups to ensure data ownership.                                                      |
-| **Daily Highlight Prompt**             | On login, the system displays a motivational entry from the user's past to reinforce self-belief and resilience.                                           |
-| **Foundational UI Framework**          | Responsive layout with clean navigation, optimized for both desktop and mobile devices. Optional support for light/dark themes.                            |
+### Phase 1: Core MVP (Pre-Calgary - Complete by July 21)
+| Feature                                | Status | Description                                                                                                                                                |
+| -------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **User Registration / Login / Logout** | ✅ Done | Email/password authentication with email verification via Mailtrap. All user data is securely isolated.                                                    |
+| **Daily Entry**                        | ✅ Done | Users complete a structured entry each day including:<br>- 3 success highlights<br>- 3 gratitude points<br>- 3 sources of anxiety<br>- A self-rating (1–5) |
+| **Edit Historical Entries**            | ⏳ Pending | Users can view and revise entries from any date, enabling reflection and continuity. (Est: 1 hour)                                                        |
+| **Data Import / Export**               | ⏳ Pending | Full export of user data (JSON/CSV), and support for importing past backups to ensure data ownership. (Est: 2 hours)                                      |
+| **Daily Highlight Prompt**             | ⏳ Pending | On login, the system displays a motivational entry from the user's past to reinforce self-belief and resilience. (Est: 2 hours)                           |
+| **OAuth Integration**                  | ⏳ Pending | Add Google and GitHub OAuth providers for seamless authentication. (Est: 2 hours)                                                                          |
+| **Foundational UI Framework**          | ✅ Done | Responsive Tailwind CSS layout with clean navigation, optimized for both desktop and mobile devices.                                                        |
+
+### Phase 2: Production Deployment (Post-Calgary)
+| Feature                                | Status | Description                                                                                                                                                |
+| -------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AWS Cloud Deployment**              | 🆕 New | Deploy application to AWS using EC2/ECS with PostgreSQL RDS database. (Est: 3-4 hours)                                                                    |
+| **Custom Domain Setup**               | 🆕 New | Configure custom domain with SSL certificate via Route 53 and CloudFront. (Est: 1 hour)                                                                   |
+| **Production Database Migration**      | 🆕 New | Migrate from SQLite to PostgreSQL for production scalability. (Est: 1 hour)                                                                               |
+| **Environment Configuration**          | 🆕 New | Set up production environment variables and email service (replace Mailtrap). (Est: 1 hour)                                                               |
+| **Mac Development Environment**        | 🆕 New | Set up development environment on Mac for continued development. (Est: 1-2 hours)                                                                          |
 
 ---
 

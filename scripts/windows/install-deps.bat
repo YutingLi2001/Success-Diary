@@ -4,8 +4,8 @@ echo  Success Diary - Install Dependencies
 echo ====================================
 echo.
 
-:: Change to project root directory (parent of scripts folder)
-cd /d "%~dp0.."
+:: Change to project root directory (two levels up from scripts/windows)
+cd /d "%~dp0..\.."
 
 :: Check if we're in the right directory
 if not exist "requirements.txt" (

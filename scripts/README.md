@@ -1,47 +1,100 @@
 # Success Diary - Development Scripts
 
-This folder contains automation scripts to streamline development workflow.
+This folder contains automation scripts to streamline development workflow across different platforms.
+
+## 📁 Folder Structure
+
+```
+scripts/
+├── windows/          # Windows batch files (.bat)
+├── mac/             # Mac shell scripts (.sh)
+├── README.md        # This file
+└── test.bat         # Testing utilities
+```
 
 ## 📁 Available Scripts
 
-### 🚀 **dev-start.bat**
+### **Windows (scripts/windows/)**
+
+#### 🚀 **dev-start.bat**
 **Complete development setup (recommended for daily use)**
 - Activates virtual environment
 - Installs/updates dependencies
 - Resets database (deletes existing data)
 - Starts development server on port 8000
 
-### ⚡ **quick-start.bat**
+#### ⚡ **quick-start.bat**
 **Quick server start (when no changes needed)**
 - Activates virtual environment
 - Starts development server immediately
 
-### 🗃️ **reset-db.bat**
+#### 🗃️ **reset-db.bat**
 **Database reset only**
 - Safely deletes existing database with confirmation
 - Smart error handling (detects if file is in use by server)
 - Flexible input (accepts y/yes/n/no and any case)
 - Useful when schema changes are made to models
 
-### 📦 **install-deps.bat**
+#### 📦 **install-deps.bat**
+**Install/update dependencies only**
+- Activates virtual environment
+- Runs `pip install -r requirements.txt`
+
+### **Mac (scripts/mac/)**
+
+#### 🚀 **dev-start.sh**
+**Complete development setup (recommended for daily use)**
+- Activates virtual environment (`source venv/bin/activate`)
+- Installs/updates dependencies
+- Resets database (deletes existing data)
+- Starts development server on port 8000
+
+#### ⚡ **quick-start.sh**
+**Quick server start (when no changes needed)**
+- Activates virtual environment
+- Starts development server immediately
+
+#### 🗃️ **reset-db.sh**
+**Database reset only**
+- Safely deletes existing database with confirmation
+- Smart error handling (detects if file is in use by server)
+- Flexible input (accepts y/yes/n/no and any case)
+- Useful when schema changes are made to models
+
+#### 📦 **install-deps.sh**
 **Install/update dependencies only**
 - Activates virtual environment
 - Runs `pip install -r requirements.txt`
 
 ## 🎯 Usage
 
-### From Windows Explorer:
-Double-click any `.bat` file to run it
+### **Windows:**
 
-### From Command Prompt:
+**From Windows Explorer:**
+- Double-click any `.bat` file in `scripts/windows/` to run it
+
+**From Command Prompt:**
 ```bash
-cd "C:\Users\Yuting\Projects\success-diary\scripts"
-dev-start.bat
+cd "C:\Users\Yuting\Projects\success-diary"
+scripts\windows\dev-start.bat
 ```
 
-### From Project Root:
+**From Project Root:**
 ```bash
-scripts\dev-start.bat
+scripts\windows\dev-start.bat
+```
+
+### **Mac:**
+
+**From Terminal:**
+```bash
+cd ~/Projects/success-diary
+./scripts/mac/dev-start.sh
+```
+
+**Making scripts executable (if needed):**
+```bash
+chmod +x scripts/mac/*.sh
 ```
 
 ## 🛠️ Script Features
