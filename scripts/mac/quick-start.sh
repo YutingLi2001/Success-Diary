@@ -6,14 +6,15 @@ echo "   Success Diary - Quick Start"
 echo "===================================="
 echo
 
-# Change to project root directory (parent of scripts folder)
-cd "$(dirname "$0")/../.."
-
-# Check if we're in the right directory
+# Check if we're in the project root directory
 if [ ! -f "app/main.py" ]; then
-    echo "ERROR: Could not find project root directory"
-    echo "Expected to find app/main.py in: $(pwd)"
-    read -p "Press any key to continue..."
+    echo "❌ ERROR: Please run this script from the project root directory"
+    echo "   Current directory: $(pwd)"
+    echo "   Expected to find: app/main.py"
+    echo ""
+    echo "   Correct usage:"
+    echo "   cd /path/to/Success-Diary"
+    echo "   ./scripts/mac/quick-start.sh"
     exit 1
 fi
 

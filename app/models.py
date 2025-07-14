@@ -1,7 +1,9 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 import uuid
-from sqlalchemy import Column, String
+import re
+from pydantic import EmailStr, validator
+from sqlalchemy import Column, String, DateTime
 from sqlalchemy.orm import declarative_base
 from sqlmodel import SQLModel, Field
 from fastapi_users import schemas
@@ -14,6 +16,8 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     
     display_name: Optional[str] = Column(String(100), nullable=True)
     timezone: Optional[str] = Column(String(50), nullable=True, default="UTC")
+    verification_code: Optional[str] = Column(String(6), nullable=True)
+    verification_code_expires: Optional[datetime] = Column(DateTime, nullable=True)
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
     display_name: Optional[str]

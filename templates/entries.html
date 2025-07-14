@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>All Entries - Success Diary</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Navigation Header -->
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-4xl mx-auto px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-6">
+          <h1 class="text-xl font-bold text-gray-800">Success Diary</h1>
+          <div class="hidden md:flex space-x-4">
+            <a href="/" class="text-gray-600 hover:text-gray-800">Dashboard</a>
+            <a href="/entries" class="text-blue-600 font-medium border-b-2 border-blue-600 pb-1">All Entries</a>
+            <a href="/analytics" class="text-gray-600 hover:text-gray-800">Analytics</a>
+            <a href="/settings" class="text-gray-600 hover:text-gray-800">Settings</a>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <span class="text-sm text-gray-600">Welcome, {{ user.display_name or user.email }}</span>
+          <button onclick="logout()" class="text-red-600 hover:text-red-800 text-sm font-medium">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto p-6">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">All Entries</h1>
+      <p class="text-gray-600">Your complete journey of successes, gratitudes, and reflections</p>
+      
+      <!-- Stats Summary -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+          <div class="text-2xl font-bold text-blue-600">{{ total_entries }}</div>
+          <div class="text-sm text-gray-600">Total Entries</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+          <div class="text-2xl font-bold text-green-600">{{ avg_score|round(1) }}/5</div>
+          <div class="text-sm text-gray-600">Average Rating</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+          <div class="text-2xl font-bold text-purple-600">{{ unique_months }}</div>
+          <div class="text-sm text-gray-600">Months Tracked</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+          <div class="text-2xl font-bold text-indigo-600">{{ streak_days }}</div>
+          <div class="text-sm text-gray-600">Day Streak</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1">
+          <input type="text" id="searchInput" placeholder="Search entries..." 
+                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 onkeyup="filterEntries()">
+        </div>
+        <div class="flex gap-2">
+          <select id="yearFilter" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="filterEntries()">
+            <option value="">All Years</option>
+            {% for year in years %}
+            <option value="{{ year }}">{{ year }}</option>
+            {% endfor %}
+          </select>
+          <select id="monthFilter" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="filterEntries()">
+            <option value="">All Months</option>
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entries by Year/Month -->
+    {% if entries_by_period %}
+      <div id="entriesContainer">
+        {% for period_data in entries_by_period %}
+        <div class="mb-8 year-month-section" data-year="{{ period_data.year }}" data-month="{{ period_data.month }}">
+          <!-- Period Header -->
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-gray-800">
+              {{ period_data.month_name }} {{ period_data.year }}
+            </h2>
+            <div class="text-sm text-gray-600">
+              {{ period_data.entries|length }} entries • Avg: {{ period_data.avg_score|round(1) }}/5
+            </div>
+          </div>
+
+          <!-- Entries Grid -->
+          <div class="grid gap-4">
+            {% for entry in period_data.entries %}
+            <div class="entry-card bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200"
+                 data-date="{{ entry.entry_date }}" data-content="{{ entry.search_content }}">
+              <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center space-x-3">
+                  <span class="font-semibold text-gray-800">{{ entry.entry_date.strftime('%A, %B %d') }}</span>
+                  <span class="text-xs text-gray-500">{{ entry.entry_date.strftime('%Y') }}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-sm bg-purple-100 text-purple-800 px-3 py-1 rounded-full font-medium">{{ entry.score }}/5</span>
+                  {% if entry.score >= 4 %}
+                    <span class="text-lg">😊</span>
+                  {% elif entry.score >= 3 %}
+                    <span class="text-lg">😐</span>
+                  {% else %}
+                    <span class="text-lg">😔</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="grid gap-3 text-sm">
+                <div>
+                  <div class="font-medium text-green-700 mb-1">Successes:</div>
+                  <div class="ml-2 space-y-1">
+                    <div>✨ {{ entry.success_1 }}</div>
+                    {% if entry.success_2 %}<div>✨ {{ entry.success_2 }}</div>{% endif %}
+                    {% if entry.success_3 %}<div>✨ {{ entry.success_3 }}</div>{% endif %}
+                  </div>
+                </div>
+                <div>
+                  <div class="font-medium text-blue-700 mb-1">Gratitude:</div>
+                  <div class="ml-2 space-y-1">
+                    <div>🙏 {{ entry.gratitude_1 }}</div>
+                    {% if entry.gratitude_2 %}<div>🙏 {{ entry.gratitude_2 }}</div>{% endif %}
+                    {% if entry.gratitude_3 %}<div>🙏 {{ entry.gratitude_3 }}</div>{% endif %}
+                  </div>
+                </div>
+                <div>
+                  <div class="font-medium text-red-700 mb-1">Worries:</div>
+                  <div class="ml-2 space-y-1">
+                    <div>💭 {{ entry.anxiety_1 }}</div>
+                    {% if entry.anxiety_2 %}<div>💭 {{ entry.anxiety_2 }}</div>{% endif %}
+                    {% if entry.anxiety_3 %}<div>💭 {{ entry.anxiety_3 }}</div>{% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-16 bg-white rounded-lg border border-gray-200">
+        <div class="text-6xl mb-4">📝</div>
+        <h2 class="text-2xl font-bold text-gray-600 mb-2">No entries yet!</h2>
+        <p class="text-gray-500 mb-6">Start your success journey by creating your first entry.</p>
+        <a href="/" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
+          Create Your First Entry
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    async function logout() {
+      try {
+        const response = await fetch('/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+      } catch (error) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+      }
+    }
+
+    function filterEntries() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const yearFilter = document.getElementById('yearFilter').value;
+      const monthFilter = document.getElementById('monthFilter').value;
+      
+      const sections = document.querySelectorAll('.year-month-section');
+      
+      sections.forEach(section => {
+        const sectionYear = section.getAttribute('data-year');
+        const sectionMonth = section.getAttribute('data-month');
+        
+        // Check year/month filters
+        let showSection = true;
+        if (yearFilter && sectionYear !== yearFilter) showSection = false;
+        if (monthFilter && sectionMonth !== monthFilter) showSection = false;
+        
+        if (!showSection) {
+          section.style.display = 'none';
+          return;
+        }
+        
+        // Filter entries within the section
+        const entries = section.querySelectorAll('.entry-card');
+        let visibleEntries = 0;
+        
+        entries.forEach(entry => {
+          const content = entry.getAttribute('data-content');
+          if (searchTerm === '' || content.toLowerCase().includes(searchTerm)) {
+            entry.style.display = 'block';
+            visibleEntries++;
+          } else {
+            entry.style.display = 'none';
+          }
+        });
+        
+        // Show/hide section based on visible entries
+        if (visibleEntries > 0) {
+          section.style.display = 'block';
+        } else {
+          section.style.display = 'none';
+        }
+      });
+    }
+
+    // Initialize filters
+    document.addEventListener('DOMContentLoaded', function() {
+      filterEntries();
+    });
+  </script>
+</body>
+</html>

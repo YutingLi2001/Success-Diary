@@ -19,26 +19,70 @@ A web application for tracking daily successes and achievements.
 
 ### Running the Application
 
-**🚀 Automated Scripts (Recommended):**
-1. Navigate to project: `cd "C:\Users\Yuting\Projects\success-diary"`
-2. Run: `scripts\dev-start.bat` (full setup) or `scripts\quick-start.bat` (quick start)
-3. Open browser: Visit http://localhost:8000
+**🚀 Full Development Environment (Recommended):**
+
+***Mac/Linux:***
+```bash
+cd /path/to/Success-Diary
+./scripts/mac/dev-start-with-email.sh
+```
+
+***Windows:***
+```cmd
+cd C:\path\to\Success-Diary
+scripts\windows\dev-start-with-email.bat
+```
+
+This starts:
+- FastAPI server: http://localhost:8000
+- Email testing UI: http://localhost:8025
+
+**⚡ Quick Start Options:**
+
+***Mac/Linux:***
+```bash
+cd /path/to/Success-Diary
+./scripts/mac/quick-start.sh                    # FastAPI only
+./scripts/mac/start-email-server.sh            # Email server only  
+./scripts/mac/dev-start.sh                     # Full setup with database reset
+```
+
+***Windows:***
+```cmd
+cd C:\path\to\Success-Diary
+scripts\windows\quick-start.bat                REM FastAPI only
+scripts\windows\start-email-server.bat         REM Email server only
+scripts\windows\dev-start.bat                  REM Full setup with database reset
+```
 
 **📋 Manual Commands (Alternative):**
-1. Navigate to project: `cd "C:\Users\Yuting\Projects\success-diary"`
-2. Activate virtual environment: `venv\Scripts\activate`
-3. Install dependencies (if needed): `pip install -r requirements.txt`
+1. Navigate to project root: `cd /path/to/Success-Diary`
+2. Start email server: `mailpit` (Terminal 1) 
+3. Activate virtual environment: `source venv/bin/activate` (Mac) or `venv\Scripts\activate` (Windows)
 4. Start development server: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
-5. Open browser: Visit http://localhost:8000
+5. Open browsers: http://localhost:8000 (app) + http://localhost:8025 (emails)
 
 **🛠️ Additional Scripts:**
-- Reset database: `scripts\reset-db.bat`
-- Install dependencies: `scripts\install-deps.bat`
-- Build CSS (if needed): `npm run build` (when you add npm scripts)
+***Mac/Linux:***
+- Install dependencies: `./scripts/mac/install-deps.sh`
+- Reset database: `./scripts/mac/reset-db.sh`
+
+***Windows:***
+- Install dependencies: `scripts\windows\install-deps.bat`
+- Reset database: `scripts\windows\reset-db.bat`
+
+**⚠️ Important:** All scripts must be run from the project root directory for consistent behavior across platforms.
 
 ### Database
 - Database file: `db.sqlite3` (auto-created on first run)
 - Models are in: `app/models.py`
+- Reset database: Delete `db.sqlite3` and restart server
+
+### Email Testing (Development)
+- **Mailpit** for local email testing: http://localhost:8025
+- **SMTP Server**: localhost:1025 (automatically configured)
+- **Email verification codes**: 6-digit codes with 10-minute expiration
+- **Installation**: `brew install mailpit` (Mac) or download from GitHub releases
 
 ### Testing & Quality
 - Run tests: `pytest` (when tests are added)
@@ -46,44 +90,107 @@ A web application for tracking daily successes and achievements.
 - Type check: `mypy app/`
 
 ## Project Structure
-- `app/` - Python application code
-- `templates/` - HTML templates
-- `static/css/` - CSS files
-- `scripts/` - Development automation scripts (dev-start.bat, quick-start.bat, etc.)
-- `Project Documentations/` - Project documentation and planning
-- `db.sqlite3` - SQLite database
+```
+Success-Diary/
+├── app/                     # Python application code
+│   ├── main.py             # FastAPI routes and endpoints
+│   ├── auth.py             # Authentication and user management
+│   ├── models.py           # Database models (User, Entry)
+│   └── database.py         # Database configuration
+├── templates/              # HTML templates
+│   ├── dashboard.html      # Main dashboard with entry form
+│   ├── entries.html        # All entries with year/month grouping
+│   ├── analytics.html      # Analytics page (coming soon)
+│   ├── settings.html       # User settings and preferences
+│   └── auth/              # Authentication templates
+│       ├── login.html      # Login form with message widgets
+│       ├── register.html   # Registration with real-time validation
+│       └── verify.html     # Email verification with 6-digit codes
+├── scripts/               # Development automation scripts
+│   ├── mac/              # macOS/Linux scripts
+│   └── windows/          # Windows batch files
+├── venv/                 # Python virtual environment
+├── db.sqlite3           # SQLite database (auto-created)
+├── .env                 # Environment variables
+└── requirements.txt     # Python dependencies
+```
 
 ## Current Status
-✅ **Working MVP + Authentication System (as of 2025-07-13)**
-- Full 11-field daily entry form (3 successes, 3 gratitudes, 3 worries, 1 rating)
-- Human-centered UX with optional fields (only first field required in each category)
-- Beautiful emoji bullet display (✨🙏💭) for entries
-- User authentication system with email verification (FastAPI-Users + Mailtrap)
-- SQLite database with proper nullable field support
-- Responsive Tailwind CSS styling
-- Form validation and error handling
-- Development automation scripts in `scripts/` folder
+✅ **Production-Ready Web Application (as of 2025-07-14)**
+
+### **🔐 Authentication System**
+- Email verification with 6-digit codes (10-minute expiration)
+- Professional message widgets (no browser alerts)
+- Real-time validation for passwords, email format, confirmation matching
+- Proper error handling with user-friendly messages
+- JWT-based session management with secure cookies
+
+### **📝 Core Features**
+- Complete daily entry system (11 fields: successes, gratitudes, worries, rating)
+- Dashboard with today's entry form + recent entries
+- All entries page with year/month categorization
+- Search and filtering functionality
+- Entry statistics (total, average rating, streaks)
+
+### **📱 User Interface**
+- Responsive design with Tailwind CSS
+- Professional message widget system
+- Real-time form validation and feedback
+- Loading states and smooth transitions
+- Mobile-friendly interface
+
+### **🛠️ Development Environment**
+- Cross-platform development scripts (Mac/Windows)
+- Local email testing with Mailpit integration
+- One-command startup for full development environment
+- Automated dependency management and database setup
+
+### **📊 Additional Pages**
+- Analytics page (professional "coming soon" with feature previews)
+- Settings page (profile management, preferences, security placeholders)
+- Navigation system across all pages
 
 ## Key Features Implemented
-- **Daily Entry Form**: Complete with encouraging placeholders and visual cues
-- **Entry Display**: Clean emoji-based bullet format for readability
-- **Optional Fields**: Fields 2 & 3 in each category are optional to reduce user pressure
-- **Database**: Auto-created SQLite with Entry model supporting null values
+- **User Registration & Login**: Complete authentication flow with email verification
+- **Email Verification**: 6-digit codes with professional email templates
+- **Daily Entry Form**: 11-field form with encouraging placeholders and visual cues
+- **Entry Management**: View, search, and filter all entries by year/month
+- **Statistics Dashboard**: Entry counts, average ratings, streaks
+- **Professional UI**: Message widgets, real-time validation, loading states
+- **Development Tools**: Cross-platform scripts with email testing integration
 
-## Important Implementation Details
-- **Database Reset**: If you change the schema, delete `db.sqlite3` to recreate with new structure
-- **Template Location**: Templates are in project root `/templates/`, not `/app/templates/`
-- **Form Handling**: Uses standard HTML forms (not HTMX) for simplicity
-- **Field Requirements**: success_1, gratitude_1, anxiety_1, and score are required; others optional
+## Technical Implementation Details
+- **Authentication**: JWT-based with secure cookie management
+- **Database**: SQLite with User and Entry models, nullable field support
+- **Email System**: Local development (Mailpit) + production ready (configurable SMTP)
+- **Validation**: Real-time client-side + comprehensive server-side validation
+- **Security**: Password requirements, email verification, session management
+- **Responsive Design**: Mobile-first with Tailwind CSS
+
+## Completed Features (This Session)
+✅ Fixed authentication system and login redirects  
+✅ Built complete email verification with 6-digit codes  
+✅ Created professional message widget system  
+✅ Added real-time form validation and error handling  
+✅ Built entries page with year/month categorization  
+✅ Created analytics and settings pages (professional placeholders)  
+✅ Set up local email testing with Mailpit  
+✅ Created cross-platform development scripts  
+✅ Updated all documentation and project structure  
 
 ## Next Priority Features
-1. User authentication system (FastAPI Users)
-2. Duplicate entry prevention (one entry per day per user)
-3. Daily highlight feature (show random past positive entry)
-4. Data export functionality (JSON/CSV)
-5. Edit/delete functionality for historical entries
+1. Analytics implementation (charts, insights, patterns)
+2. Settings functionality (profile updates, password change, 2FA)
+3. Data export functionality (JSON/CSV/PDF)
+4. Edit/delete functionality for historical entries
+5. Daily highlight feature (random positive entry)
+6. Duplicate entry prevention (one entry per day per user)
+7. Dark mode and theming
+8. Mobile app (PWA)
 
-## Notes
-- Project uses human-centered design principles
-- All text is in English for international contributors
-- Focus on encouraging reflection rather than demanding perfection
+## Development Notes
+- **Human-centered design**: Encouraging reflection over perfection
+- **Security-first**: All forms protected against common vulnerabilities
+- **Performance**: Optimized database queries and minimal JavaScript
+- **Accessibility**: Semantic HTML and keyboard navigation support
+- **Cross-platform**: Consistent experience across Windows, Mac, and Linux

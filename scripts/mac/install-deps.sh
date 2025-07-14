@@ -6,13 +6,15 @@ echo "  Success Diary - Install Dependencies"
 echo "===================================="
 echo
 
-# Change to project root directory (parent of scripts folder)
-cd "$(dirname "$0")/../.."
-
-# Check if we're in the right directory
-if [ ! -f "requirements.txt" ]; then
-    echo "ERROR: requirements.txt not found"
-    echo "Please run this script from the success-diary project root directory"
+# Check if we're in the project root directory
+if [ ! -f "app/main.py" ] || [ ! -f "requirements.txt" ]; then
+    echo "❌ ERROR: Please run this script from the project root directory"
+    echo "   Current directory: $(pwd)"
+    echo "   Expected to find: app/main.py and requirements.txt"
+    echo ""
+    echo "   Correct usage:"
+    echo "   cd /path/to/Success-Diary"
+    echo "   ./scripts/mac/install-deps.sh"
     read -p "Press any key to continue..."
     exit 1
 fi

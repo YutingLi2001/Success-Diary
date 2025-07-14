@@ -4,13 +4,21 @@ echo  Success Diary - Install Dependencies
 echo ====================================
 echo.
 
-:: Change to project root directory (two levels up from scripts/windows)
-cd /d "%~dp0..\.."
+:: Check if we're in the project root directory
+if not exist "app\main.py" (
+    echo ❌ ERROR: Please run this script from the project root directory
+    echo    Current directory: %CD%
+    echo    Expected to find: app\main.py and requirements.txt
+    echo.
+    echo    Correct usage:
+    echo    cd C:\path\to\Success-Diary
+    echo    scripts\windows\install-deps.bat
+    pause
+    exit /b 1
+)
 
-:: Check if we're in the right directory
 if not exist "requirements.txt" (
-    echo ERROR: Could not find project root directory
-    echo Expected to find requirements.txt in: %CD%
+    echo ❌ ERROR: requirements.txt not found in project root
     pause
     exit /b 1
 )

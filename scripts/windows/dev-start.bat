@@ -4,13 +4,15 @@ echo    Success Diary - Dev Startup
 echo ====================================
 echo.
 
-:: Change to project root directory (two levels up from scripts/windows)
-cd /d "%~dp0..\.."
-
-:: Check if we're in the right directory
+:: Check if we're in the project root directory
 if not exist "app\main.py" (
-    echo ERROR: Could not find project root directory
-    echo Expected to find app\main.py in: %CD%
+    echo ❌ ERROR: Please run this script from the project root directory
+    echo    Current directory: %CD%
+    echo    Expected to find: app\main.py
+    echo.
+    echo    Correct usage:
+    echo    cd C:\path\to\Success-Diary
+    echo    scripts\windows\dev-start.bat
     pause
     exit /b 1
 )
