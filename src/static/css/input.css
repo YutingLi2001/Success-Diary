@@ -1,0 +1,3 @@
+echo @tailwind base;     > app\static\css\input.css
+echo @tailwind components; >> app\static\css\input.css
+echo @tailwind utilities;  >> app\static\css\input.css
