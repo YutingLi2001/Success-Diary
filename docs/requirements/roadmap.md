@@ -1,5 +1,8 @@
 # Development Roadmap
 
+## Product Description
+SuccessDiary is a lightweight daily logging application designed for personal growth tracking through structured emotional reflection. The core focus is building daily habits of positive reflection and emotional awareness.
+
 ## Project Timeline
 **Start Date**: June 9, 2025  
 **Target Production Launch**: August 17, 2025  
@@ -50,23 +53,26 @@
 - **Dynamic UI**: Progressive field display (show next line only after current has content - minimizes scrolling)
 - **Entry Rules**: Enforce one entry per calendar day (user timezone-based)
 - **Automatic Timestamps**: System automatically records submission timestamp for every entry saved
-- **Emotion Point Limits**: Enforce exact item count constraints:
+- **Three Emotion Points** (**This is the key differentiator and main value proposition**): Enforce exact item count constraints:
   - **Highlights**: 1-3 items (minimum 1 required) - brief sentences about daily achievements
   - **Gratitude**: 1-3 items (minimum 1 required) - brief sentences about things to be grateful for  
   - **Anxiety**: 0-3 items (optional, can be empty) - brief sentences about worries or concerns
-- **Free-form Journal Limits**: Suggested 4,000-character soft limit for journal text field
+  - Maximum 3 items per category, no more allowed
+  - UI behavior: Show only one input line initially, display next line only after current line has content (minimize scrolling)
+- **Daily Free-form Journal**: One text field for free writing about the day, completely optional (users can leave blank with no minimum character requirement), suggested 4,000-character soft limit
+- **Date-based System**: Entries are organized by calendar date
 
 #### Entry Management
 - **Edit Historical Entries**: Full editing capability for past entries with overwrite behavior
 - **Entry Deletion**: Hard delete with confirmation warning for user safety
-- **Entry Validation**: Enhanced form validation with user-friendly error messages
+- **Entry Validation**: Enhanced form validation with user-friendly error messages, frontend validation before backend submission
 - **Auto-save**: Draft saving to prevent data loss
 
 #### Essential User Experience
-- **Saving Feedback**: Gentle confirmation messages after successful saves
+- **Saving Feedback**: Display gentle confirmation "Today's journal has been saved" after saving
 - **Mobile Responsiveness**: Optimized interface for mobile devices
 - **Error Handling**: Comprehensive error handling with recovery guidance
-- **Required Rating**: Users must provide 1-5 integer rating or "-" to save entry (this field is ALWAYS enabled and cannot be disabled)
+- **Overall Daily Rating**: Located at the very end of each journal entry, users must provide 1-5 integer rating or "-" to save entry (this field is ALWAYS enabled and cannot be disabled), will be used for future trend charts/visualizations
 
 **Estimated Completion**: 8-10 development hours
 
@@ -104,22 +110,22 @@
 
 ### Health Tracking Modules
 - **Diet Tracking**: 
-  - Light mode (default): Overall eating satisfaction 1-5 scale + optional notes
-  - Standard mode (advanced): Calories (kcal), Protein/Carbs/Fat (grams with 1 decimal place)
-  - Users can switch between modes anytime in settings
+  - Light mode (default): Overall eating satisfaction 1-5 scale (1 = very poor, 5 = excellent) + optional notes (text field for additional details about eating patterns)
+  - Standard mode (advanced): Calories (integer input, unit: kcal), Protein/Carbs/Fat (one decimal place, unit: g)
+  - Users can switch between modes at any time in settings
 - **Exercise Tracking**: 
-  - Initial toggle: "Did you work out?" (Yes/No)
-  - If No: Physical Activity Level 1-5 scale (1=sedentary, 5=very active)
-  - If Yes: Exercise Type dropdown (Cardio/Strength Training/custom), Duration (minutes), Subjective Feeling 1-5 scale
-- **Sleep Tracking**: Duration (hours with 1 decimal), Quality 1-5 scale, optional notes
-- **Productivity Module**: Focus Time (integer minutes), Focus Quality 1-5 scale
+  - Initial question: "Did you work out?" (Yes/No toggle)
+  - If No: Physical Activity Level 1-5 scale (1=sedentary, 5=very active), skip structured workout fields
+  - If Yes: Exercise Type dropdown with presets (Cardio/Strength Training) plus custom text input option, Duration (integer minutes), Subjective Feeling 1-5 scale (1 = terrible, 5 = excellent)
+- **Sleep Tracking**: Sleep Duration (one decimal place, unit: hours), Sleep Quality 1-5 scale (user self-assessment), Notes (optional text field)
+- **Productivity Module**: Focus Time (integer minutes - total deep work time for the day), Focus Quality 1-5 scale (quality assessment of focus sessions)
 
 ### Enhanced User Experience
 - **Module Settings**: Enable/disable entire health sections (when disabled, forms hide immediately from current day's entry, but historical data preserved)
 - **Sub-module Toggles**: Individual components can be toggled on/off within each module
-- **Quick Fill Features**: "Copy from Yesterday" functionality for quantitative data, common values can be set as defaults
-- **Advanced Validation**: Range validation for health metrics with red border highlights for out-of-range values
-- **Collapsed Sections**: Page loads with sections collapsed by default, only enabled modules auto-expand
+- **Quick Fill Features**: "Copy from Yesterday" function (quickly copies previous day's quantitative data), common values can be set as defaults
+- **Advanced Validation**: All numeric fields show acceptable ranges, out-of-range or incorrect format triggers red border highlight, range validation for health metrics
+- **Collapsed Sections**: Page loads with sections collapsed by default, only enabled modules auto-expand, all other sections remain collapsed to reduce scrolling
 
 **Timeline**: Post-MVP 1.0 completion, user feedback dependent
 
@@ -203,4 +209,16 @@
 
 ---
 
-*This document defines the development timeline and feature roadmap. For technical implementation details, see `architecture.md`. For user requirements, see `product-requirements.md`. For detailed feature specifications, see `core-functionality-overview.md`.*
+## Summary
+
+**MVP Focus**: Core emotional reflection through structured daily journaling. Prove the concept and build user habits.
+
+**V2 Focus**: Optional health and productivity tracking for users wanting comprehensive logging.
+
+**V3+ Focus**: Power user features, customization, and advanced analytics.
+
+This phased approach ensures we deliver core value first, then expand based on user feedback and adoption.
+
+---
+
+*This document defines the development timeline and feature roadmap, encompassing all core functionality requirements. For technical implementation details, see `architecture.md`. For user requirements, see `product-requirements.md`.*
