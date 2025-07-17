@@ -57,23 +57,54 @@ SuccessDiary is a privacy-focused web application designed to support personal g
 
 ### Core User Journey
 1. **Onboarding**: Simple registration with email verification
+   - **V3.0+ OAuth**: Google OAuth first (broad accessibility), Apple Sign-In second (V3.1), GitHub OAuth third (V3.2 if needed)
+   - **Target Demographic**: Personal growth enthusiasts aged 20-35 (general consumers, not developers)
 2. **Daily Entry**: Quick, structured reflection (< 5 minutes)
+   - **Progressive UI**: Fields appear when content is non-empty AND meaningful (2+ characters, 300ms debounced)
+   - **Entry Title**: Auto-generated using user's locale (e.g., "January 15, 2025" US, "15. Januar 2025" DE)
+   - **Three Emotion Points**: Victory, Gratitude, Anxiety (255 chars each, counter at 150, highlight at 200)
+   - **Overall Rating**: Radio buttons 1-5 plus "Skip rating today" option (stores NULL)
+   - **Journal Content**: Main reflection area (8,000 char limit with progressive indicators at 90%/95%)
+   - **Auto-save**: Draft system with 30-second intervals, finalize on user "Save Entry" action
 3. **Historical Review**: Easy browsing of past entries for motivation
+   - **Default Sort**: Newest first with user preference toggle ("Newest First" / "Oldest First")
+   - **Entry Management**: Edit with one-level undo, Archive (hide without deletion), Delete (30-day recycle bin)
 4. **Progress Recognition**: System helps users recognize patterns and growth
+   - **Analytics**: Chart.js visualizations with pre-aggregated data from FastAPI endpoints
+   - **Timezone Aware**: Auto-detection with manual override capability
 5. **Data Ownership**: Users can export their complete history at any time
+   - **Export Format**: CSV first (V3.0) for spreadsheet analysis, JSON later (V3.1) for power users
 
 ### Usability Standards
 - **Mobile-first design**: Core functionality works seamlessly on mobile devices
-- **Performance**: Page loads under 3 seconds on standard connections
+  - **Responsive Breakpoints**: 375px (Mobile - iPhone SE+), 768px (Tablet), 1024px (Desktop), 1440px (Large desktop)
+  - **Touch-optimized**: Form fields and buttons sized for touch interaction
+- **Performance**: Website loads and functions correctly with focus on reliability over speed metrics
 - **Accessibility**: Basic screen reader compatibility and keyboard navigation
-- **Error handling**: Friendly error messages with clear recovery actions
+  - **Overall Rating**: Radio buttons for 1-5 plus "Skip rating today" option for screen reader accessibility
+- **Error handling**: HTMX-native error handling with contextual recovery guidance
+  - **Validation**: Field-level inline errors with retry functionality
+  - **Authentication**: Session expired with login redirect
+  - **Network**: Connection issues with retry buttons
+  - **Server**: Generic server errors with graceful fallback
 - **Data safety**: Auto-save functionality prevents data loss
+  - **Draft System**: Entries start as drafts, auto-save every 30 seconds, finalize on user action
+  - **One-level Undo**: Previous content stored for 24-48 hours with "Undo last edit" button
 
 ## Business Model & Positioning
 
 ### Monetization Strategy
-- **Freemium model**: MVP features free forever to build user base
-- **Premium subscription**: Advanced features (V2.0+) available via monthly/yearly subscription
+- **Simple Two-Tier Freemium**: Clear value differentiation eliminates choice paralysis
+  - **Free Tier**: 30 days journal entries, basic entry form (all 11 fields), entry history viewing, basic search
+  - **Premium Tier**: $4.99/month or $49.99/year
+    - Unlimited journal entries
+    - Advanced analytics and mood tracking
+    - Data export (CSV format)
+    - Multiple themes and customization
+    - Priority customer support
+    - Early access to new features
+- **Market Positioning**: Competitive $4.99/month between Day One ($2.92/month) and Reflectly ($8.99/month)
+- **Upgrade Trigger**: When users hit 30-day limit and want to keep their history
 - **No advertising**: Maintains privacy and user trust in personal journaling space
 - **Value proposition**: Privacy + simplicity + long-term data ownership
 
@@ -92,7 +123,10 @@ SuccessDiary is a privacy-focused web application designed to support personal g
 - **Learning goals**: Understand optimal reflection structure and user motivation patterns
 
 ### Feature Validation Framework
-- **User feedback**: Direct feedback collection from early adopters
+- **User feedback**: In-app feedback widget in settings/profile area
+  - **Form Design**: "What's working well?" (500 chars), "What needs improvement?" (500 chars), "Feature request" (300 chars)
+  - **Collection Method**: Non-intrusive, accessible when users want to provide input
+  - **Storage**: UserFeedback model with structured data for analysis
 - **Usage analytics**: Feature adoption rates and user engagement patterns
 - **Retention analysis**: Which features correlate with long-term usage
 - **Iteration approach**: Rapid iteration based on user behavior and feedback

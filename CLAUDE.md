@@ -161,6 +161,11 @@ Success-Diary/
 - **Development Requirements**: `docs/requirements/development-requirements.md`
 - **Timeline & Scope**: `docs/requirements/project-scope.md`
 
+### 🏗️ Architecture Decisions
+- **Architecture Decision Records**: `docs/adr/README.md`
+- **Technical Decision History**: Immutable record of key architectural choices
+- **Implementation Rationale**: Context and consequences of technical decisions
+
 ### 🛠️ Development Operations
 - **Developer Manual**: `docs/operations/developer-manual.md`
 - **Setup Guides**: Cross-platform installation and troubleshooting
@@ -175,16 +180,18 @@ Success-Diary/
 
 ### 🎯 Daily Development Process
 1. **Planning Review**: Check `docs/requirements/` for current objectives
-2. **Start Environment**: Run platform-specific dev-start script
-3. **Track Progress**: Use prompt templates for consistent documentation
-4. **Schema Changes**: Reset database if modifying `app/models.py`
-5. **Update Logs**: Document sessions using `prompts/update-development-journal.md`
+2. **Architecture Review**: Consult `docs/adr/` for technical decision context
+3. **Start Environment**: Run platform-specific dev-start script
+4. **Track Progress**: Use prompt templates for consistent documentation
+5. **Schema Changes**: Reset database if modifying `app/models.py`
+6. **Update Logs**: Document sessions using `prompts/update-development-journal.md`
 
 ### 🔄 "Planning Then Go" Methodology
 1. **Requirements Phase**: Comprehensive planning before implementation
 2. **Specification Documentation**: Detailed requirements capture in `docs/requirements/`
-3. **Template-Driven Execution**: Use prompt system for consistent AI collaboration
-4. **Progress Tracking**: Regular journal updates with concise, human-focused content
+3. **Architecture Decision Records**: Document key technical choices in `docs/adr/`
+4. **Template-Driven Execution**: Use prompt system for consistent AI collaboration
+5. **Progress Tracking**: Regular journal updates with concise, human-focused content
 
 ## Technical Implementation
 
