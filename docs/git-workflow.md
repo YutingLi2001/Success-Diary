@@ -19,38 +19,55 @@ This document defines the version control strategy aligned with our development 
 - **Purpose**: Stable, production-ready code only
 - **Protection**: Protected branch with required reviews
 - **Deploy Target**: Production AWS environment (post-August 17, 2025)
-- **Merge Source**: Only from `develop` branch via Pull Requests
+- **Merge Source**: Only from release branches via Pull Requests
 - **Naming**: `main` (GitHub default)
 
 #### `develop` (Integration Branch)
-- **Purpose**: Integration branch for completed features
+- **Purpose**: Integration branch for completed release phases
 - **Stability**: Should always be functional but may have minor bugs
 - **Deploy Target**: Development/staging environment
-- **Merge Source**: Feature branches via Pull Requests
+- **Merge Source**: Release branches via Pull Requests
 - **Naming**: `develop`
 
-### Feature Branches
+### Release Branches (Major Phases)
 
-#### MVP 1.0 Feature Branches
-Based on current roadmap priorities:
+#### `release/mvp-1.0-foundation` - Foundational Systems
+- **Purpose**: All foundational systems that enable core features
+- **Includes**: Error handling, validation, timezone handling, mobile responsive foundation
+- **Dependencies**: None (foundational layer)
+- **Merge Target**: `develop` when foundation complete
 
-- `feature/entry-editing` - Edit historical entries functionality
-- `feature/entry-titles` - Custom titles with auto-generated fallback
-- `feature/dynamic-ui` - Progressive field display
-- `feature/form-validation` - Enhanced validation and error handling
-- `feature/mobile-responsive` - Mobile optimization
-- `feature/history-enhancement` - Enhanced history view (Date|Title|Rating table)
+#### `release/mvp-1.0-core` - Core Features
+- **Purpose**: Main user-facing functionality for MVP
+- **Includes**: Entry management, dynamic UI, history enhancements
+- **Dependencies**: Foundation phase must be complete
+- **Merge Target**: `develop` when core features complete
+
+#### `release/mvp-1.0-production` - Production Deployment
+- **Purpose**: Infrastructure and deployment preparation
+- **Includes**: AWS setup, database migration, production configuration
+- **Dependencies**: Foundation and core phases complete
+- **Merge Target**: `main` for production deployment
+
+### Feature Branches (Multi-Feature Approach)
+
+#### Foundation Phase Feature Branches
+- `feature/form-validation` ✅ **COMPLETED** - Enhanced validation, error handling, script organization
+- `feature/timezone-handling` - User timezone detection, settings, and display logic
+- `feature/mobile-responsive` - Mobile optimization and responsive design foundation
+
+#### Core Phase Feature Branches
+- `feature/entry-management` - Entry editing, titles, archive system, draft/autosave
+- `feature/dynamic-ui` - Progressive field display, user feedback systems, UX enhancements
+- `feature/history-enhancement` - Enhanced history view, sorting, search functionality
+
+#### Production Phase Feature Branches
+- `feature/aws-deployment` - Production infrastructure setup, database migration, email service
 
 #### Version 2.0+ Feature Branches (Future)
-- `feature/health-tracking` - Health modules implementation
-- `feature/diet-tracking` - Diet tracking light/standard modes
-- `feature/exercise-tracking` - Exercise logging functionality
-- `feature/sleep-tracking` - Sleep duration and quality tracking
-
-#### Infrastructure Branches
-- `feature/aws-deployment` - Production deployment setup
-- `feature/postgresql-migration` - Database migration from SQLite
-- `feature/email-production` - Production email service integration
+- `feature/health-tracking` - Complete health modules (diet, exercise, sleep, productivity)
+- `feature/advanced-analytics` - Data visualization, insights, export functionality
+- `feature/custom-fields` - User-defined fields and advanced customization
 
 ### Hotfix Branches
 - `hotfix/critical-bug-name` - Critical production fixes
@@ -58,51 +75,57 @@ Based on current roadmap priorities:
 
 ## Workflow Process
 
-### 1. Daily Development Workflow
+### 1. Phase-Based Development Workflow
 
 ```bash
-# Start new feature
-git checkout develop
-git pull origin develop
-git checkout -b feature/entry-editing
+# Start new feature within a release phase
+git checkout release/mvp-1.0-foundation
+git pull origin release/mvp-1.0-foundation
+git checkout -b feature/timezone-handling
 
-# Work on feature
-# ... make changes ...
+# Work on feature (may include multiple related components)
+# ... implement timezone detection ...
+# ... add settings UI ...
+# ... update date display logic ...
 git add .
-git commit -m "implement entry editing core functionality
+git commit -m "implement timezone handling system
 
-- Add edit route for historical entries
-- Implement entry update validation
-- Add edit button to history view
+- Add browser timezone detection with fallback
+- Create user settings for manual timezone override
+- Update all date displays to use user timezone
+- Add timezone persistence to user model
 
 🤖 Generated with Claude Code
 Co-Authored-By: Claude <noreply@anthropic.com>"
 
 # Push feature branch
-git push -u origin feature/entry-editing
+git push -u origin feature/timezone-handling
 ```
 
 ### 2. Feature Completion Workflow
 
 ```bash
-# Create Pull Request (using GitHub CLI)
-gh pr create --title "Add entry editing functionality" --body "$(cat <<'EOF'
+# Create Pull Request to release branch (using GitHub CLI)
+gh pr create --base release/mvp-1.0-foundation --title "Complete timezone handling system" --body "$(cat <<'EOF'
 ## Summary
-- Implements full editing capability for historical entries
-- Adds entry update validation and error handling
-- Integrates edit functionality with existing history view
+- Implements comprehensive timezone handling for global users
+- Adds browser detection with manual override capability
+- Updates all date/time displays to respect user timezone
+- Provides foundation for entry titles and history sorting
 
-## Changes
-- New edit route in app/main.py
-- Entry update validation in models
-- Edit button and form in history template
-- Enhanced error handling for concurrent edits
+## Multi-Feature Changes
+- Browser timezone detection with Intl.DateTimeFormat API
+- User settings UI for manual timezone selection
+- Database schema updates for timezone preferences
+- Date display logic updated across all templates
+- Timezone-aware entry title generation preparation
 
 ## Test Plan
-- [ ] Edit historical entries successfully saves changes
-- [ ] Validation prevents invalid data submission
-- [ ] Edit button appears correctly in history view
-- [ ] Form pre-fills with existing entry data
+- [ ] Timezone detection works across different browsers
+- [ ] Manual timezone override saves and persists
+- [ ] All date displays reflect user timezone correctly
+- [ ] Settings UI is intuitive and accessible
+- [ ] Foundation ready for entry titles feature
 
 🤖 Generated with Claude Code
 EOF
@@ -227,23 +250,25 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ## Development Phase Alignment
 
-### Current Phase: MVP 1.0 Development (✅ Branches Ready)
-**Active Branches**:
-- ✅ `main` (stable foundation with documentation)
-- ✅ `develop` (MVP integration branch)
-- ✅ `feature/entry-editing` (current priority - ready for development)
-- ✅ `feature/entry-titles` (ready for development)
-- ✅ `feature/dynamic-ui` (ready for development)
-- ✅ `feature/form-validation` (ready for development)
-- ✅ `feature/mobile-responsive` (ready for development)
-- ✅ `feature/history-enhancement` (ready for development)
+### Current Phase: MVP 1.0 Foundation (🔄 In Progress)
+**Active Release Branches**:
+- ✅ `main` (stable foundation with comprehensive documentation)
+- ✅ `develop` (phase integration branch)
+- ✅ `release/mvp-1.0-foundation` (foundational systems development)
+- 📋 `release/mvp-1.0-core` (will be created after foundation complete)
+- 📋 `release/mvp-1.0-production` (will be created after core complete)
 
-**Workflow**:
-1. ✅ Feature branches created from `develop`
-2. 🔄 Complete individual MVP features (in progress)
-3. 📋 Merge to `develop` via Pull Requests (planned)
-4. 📋 Test integrated functionality (planned)
-5. 📋 Prepare release branch for production deploy (planned)
+**Foundation Phase Status**:
+- ✅ `feature/form-validation` (COMPLETED - validation + script organization)
+- 🔄 `feature/timezone-handling` (NEXT PRIORITY - user timezone system)
+- 📋 `feature/mobile-responsive` (PLANNED - responsive design foundation)
+
+**Phase Workflow**:
+1. ✅ Foundation release branch created from `develop`
+2. 🔄 Complete foundational features (form validation DONE, timezone handling NEXT)
+3. 📋 Integrate foundation phase to `develop` when complete
+4. 📋 Begin core phase with entry management features
+5. 📋 Final production phase for AWS deployment
 
 ### Future Phase: Production Deployment
 **Additional Branches**:
@@ -381,29 +406,35 @@ gh release create v1.0.0 --title "MVP 1.0 Release" --notes-file release-notes.md
     tree = log --graph --pretty=format:'%h -%d %s (%cr) <%an>' --abbrev-commit
 ```
 
-## ✅ Branch Setup Complete
+## 🔄 Branch Structure Evolution
 
-### Current Branch Structure (Created July 15, 2025)
+### Current Multi-Feature Branch Structure (Updated 2025-07-17)
 
 **Core Branches:**
-- ✅ `main` - Production-ready code with latest documentation
-- ✅ `develop` - Integration branch created from main
+- ✅ `main` - Production-ready code with comprehensive documentation
+- ✅ `develop` - Phase integration branch
 
-**MVP 1.0 Feature Branches (Ready for Development):**
-- ✅ `feature/entry-editing` - Edit historical entries functionality
-- ✅ `feature/entry-titles` - Custom titles with auto-generated fallback
-- ✅ `feature/dynamic-ui` - Progressive field display
-- ✅ `feature/form-validation` - Enhanced validation and error handling
-- ✅ `feature/mobile-responsive` - Mobile optimization
-- ✅ `feature/history-enhancement` - Enhanced history view (Date|Title|Rating table)
+**Foundation Phase (🔄 In Progress):**
+- ✅ `release/mvp-1.0-foundation` - Foundational systems development
+- ✅ `feature/form-validation` - **COMPLETED** (validation + error handling + script organization)
+- 🔄 `feature/timezone-handling` - **NEXT** (timezone detection + settings + display logic)
+- 📋 `feature/mobile-responsive` - **PLANNED** (responsive foundation + mobile optimization)
 
-**Infrastructure Branches:**
-- ✅ `feature/aws-deployment` - Production deployment setup
+**Core Phase (📋 Planned):**
+- 📋 `release/mvp-1.0-core` - Core feature development (created after foundation)
+- 📋 `feature/entry-management` - Entry editing + titles + archive + drafts
+- 📋 `feature/dynamic-ui` - Progressive display + feedback + UX enhancements
+- 📋 `feature/history-enhancement` - Sorting + search + enhanced views
 
-**All branches have been:**
-- ✅ Created locally and pushed to GitHub remote
-- ✅ Set up with tracking branches (`-u origin/branch-name`)
-- ✅ Ready for immediate development work
+**Production Phase (📋 Future):**
+- 📋 `release/mvp-1.0-production` - Production deployment preparation
+- 📋 `feature/aws-deployment` - Infrastructure + migration + production config
+
+**Branch Status:**
+- ✅ Hierarchical release structure implemented
+- ✅ Multi-feature approach adopted for realistic development
+- ✅ Foundation phase active with form validation completed
+- 🔄 Ready for timezone handling development
 
 ### Next Steps: Start Development
 

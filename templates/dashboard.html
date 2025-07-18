@@ -34,29 +34,47 @@
     <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
       <h2 class="text-xl font-semibold mb-4 text-gray-800">Today's Entry</h2>
       
-      <form method="post" action="/add" class="grid gap-4">
+      <form id="daily-entry-form" method="post" action="/add" class="grid gap-4">
         <!-- Success Section -->
         <div class="space-y-2">
           <h3 class="font-semibold text-green-700">Today's Successes <span class="text-sm font-normal text-green-600">(at least one)</span></h3>
-          <input name="success_1" placeholder="✨ What went well today? (required)" class="border-2 border-green-300 p-3 w-full rounded-lg focus:border-green-500 focus:outline-none" required />
-          <input name="success_2" placeholder="Any other wins or progress? (optional)" class="border border-green-200 p-3 w-full rounded-lg text-gray-600 focus:border-green-400 focus:outline-none" />
-          <input name="success_3" placeholder="One more success to celebrate? (optional)" class="border border-green-200 p-3 w-full rounded-lg text-gray-600 focus:border-green-400 focus:outline-none" />
+          <div class="form-field">
+            <input name="success_1" placeholder="✨ What went well today? (required)" class="border-2 border-green-300 p-3 w-full rounded-lg focus:border-green-500 focus:outline-none" required />
+          </div>
+          <div class="form-field">
+            <input name="success_2" placeholder="Any other wins or progress? (optional)" class="border border-green-200 p-3 w-full rounded-lg text-gray-600 focus:border-green-400 focus:outline-none" />
+          </div>
+          <div class="form-field">
+            <input name="success_3" placeholder="One more success to celebrate? (optional)" class="border border-green-200 p-3 w-full rounded-lg text-gray-600 focus:border-green-400 focus:outline-none" />
+          </div>
         </div>
 
         <!-- Gratitude Section -->
         <div class="space-y-2">
           <h3 class="font-semibold text-blue-700">Today's Gratitude <span class="text-sm font-normal text-blue-600">(at least one)</span></h3>
-          <input name="gratitude_1" placeholder="🙏 What are you grateful for today? (required)" class="border-2 border-blue-300 p-3 w-full rounded-lg focus:border-blue-500 focus:outline-none" required />
-          <input name="gratitude_2" placeholder="Something else that brought you joy? (optional)" class="border border-blue-200 p-3 w-full rounded-lg text-gray-600 focus:border-blue-400 focus:outline-none" />
-          <input name="gratitude_3" placeholder="One more thing to appreciate? (optional)" class="border border-blue-200 p-3 w-full rounded-lg text-gray-600 focus:border-blue-400 focus:outline-none" />
+          <div class="form-field">
+            <input name="gratitude_1" placeholder="🙏 What are you grateful for today? (required)" class="border-2 border-blue-300 p-3 w-full rounded-lg focus:border-blue-500 focus:outline-none" required />
+          </div>
+          <div class="form-field">
+            <input name="gratitude_2" placeholder="Something else that brought you joy? (optional)" class="border border-blue-200 p-3 w-full rounded-lg text-gray-600 focus:border-blue-400 focus:outline-none" />
+          </div>
+          <div class="form-field">
+            <input name="gratitude_3" placeholder="One more thing to appreciate? (optional)" class="border border-blue-200 p-3 w-full rounded-lg text-gray-600 focus:border-blue-400 focus:outline-none" />
+          </div>
         </div>
 
         <!-- Anxiety Section -->
         <div class="space-y-2">
           <h3 class="font-semibold text-red-700">Today's Worries <span class="text-sm font-normal text-red-600">(at least one)</span></h3>
-          <input name="anxiety_1" placeholder="💭 What's on your mind? Any concerns? (required)" class="border-2 border-red-300 p-3 w-full rounded-lg focus:border-red-500 focus:outline-none" required />
-          <input name="anxiety_2" placeholder="Any other stress or challenges? (optional)" class="border border-red-200 p-3 w-full rounded-lg text-gray-600 focus:border-red-400 focus:outline-none" />
-          <input name="anxiety_3" placeholder="Anything else worth noting? (optional)" class="border border-red-200 p-3 w-full rounded-lg text-gray-600 focus:border-red-400 focus:outline-none" />
+          <div class="form-field">
+            <input name="anxiety_1" placeholder="💭 What's on your mind? Any concerns? (required)" class="border-2 border-red-300 p-3 w-full rounded-lg focus:border-red-500 focus:outline-none" required />
+          </div>
+          <div class="form-field">
+            <input name="anxiety_2" placeholder="Any other stress or challenges? (optional)" class="border border-red-200 p-3 w-full rounded-lg text-gray-600 focus:border-red-400 focus:outline-none" />
+          </div>
+          <div class="form-field">
+            <input name="anxiety_3" placeholder="Anything else worth noting? (optional)" class="border border-red-200 p-3 w-full rounded-lg text-gray-600 focus:border-red-400 focus:outline-none" />
+          </div>
         </div>
 
         <!-- Self Rating -->
@@ -140,6 +158,33 @@
         window.location.href = '/login';
       }
     }
+  </script>
+  
+  <!-- Error Handling JavaScript -->
+  <script src="/static/js/error-handlers.js"></script>
+  
+  <!-- Validation Engine -->
+  <script src="/static/js/validation-engine.js"></script>
+  
+  <!-- Initialize Progressive Validation -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      try {
+        // Fetch validation configuration
+        const response = await fetch('/api/validation-config/daily_entry');
+        const data = await response.json();
+        
+        // Initialize validation for the daily entry form
+        const validationEngine = initializeValidation('#daily-entry-form', data.config);
+        
+        if (validationEngine) {
+          console.log('Progressive validation initialized for daily entry form');
+        }
+      } catch (error) {
+        console.warn('Failed to initialize progressive validation:', error);
+        // Graceful degradation - form still works without validation
+      }
+    });
   </script>
 </body>
 </html>

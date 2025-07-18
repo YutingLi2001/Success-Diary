@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Optional
-from fastapi import FastAPI, Request, Depends, Form
+from fastapi import FastAPI, Request, Depends, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
@@ -10,7 +10,27 @@ from app.models import Entry, User, UserCreate, UserRead, UserUpdate
 from app.auth import auth_backend, fastapi_users, current_active_user, current_verified_user, google_oauth_router, github_oauth_router
 from fastapi.templating import Jinja2Templates
 
+# Import error handling system
+from app.errors import (
+    http_exception_handler,
+    authentication_error_handler,
+    validation_error_handler,
+    network_error_handler,
+    general_exception_handler,
+    AuthenticationError,
+    ValidationError,
+    NetworkError
+)
+from app.validation import get_client_validation_config, validate_daily_entry_server
+
 app = FastAPI()
+
+# Register error handlers
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(AuthenticationError, authentication_error_handler)
+app.add_exception_handler(ValidationError, validation_error_handler)
+app.add_exception_handler(NetworkError, network_error_handler)
+app.add_exception_handler(Exception, general_exception_handler)
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 templates = Jinja2Templates(directory=Path(__file__).parent.parent / "templates")
 
@@ -462,4 +482,54 @@ async def add_entry(
     )
     db.add(entry)
     db.commit()
+    
+    # Show success message for HTMX requests
+    if request.headers.get("HX-Request"):
+        return HTMLResponse('<div class="success-message">Entry saved successfully!</div>')
+    
     return RedirectResponse("/", status_code=303)
+
+
+# Test endpoints for error handling (development only)
+@app.get("/test/errors")
+async def test_errors_page(request: Request):
+    """Development page to test different error types."""
+    return templates.TemplateResponse("test/errors.html", {"request": request})
+
+
+@app.post("/test/validation-error")
+async def test_validation_error(request: Request):
+    """Test validation error handling."""
+    raise ValidationError("This is a test validation error. Please check your input.")
+
+
+@app.post("/test/auth-error")
+async def test_auth_error(request: Request):
+    """Test authentication error handling."""
+    raise AuthenticationError("Your session has expired. Please sign in again.")
+
+
+@app.post("/test/network-error")
+async def test_network_error(request: Request):
+    """Test network error handling."""
+    raise NetworkError("Connection to external service failed.")
+
+
+@app.post("/test/server-error")
+async def test_server_error(request: Request):
+    """Test server error handling."""
+    raise Exception("This is a test server error.")
+
+
+@app.post("/test/http-error")
+async def test_http_error(request: Request):
+    """Test HTTP error handling."""
+    raise HTTPException(status_code=404, detail="Test resource not found")
+
+
+# Validation configuration endpoint
+@app.get("/api/validation-config/{form_type}")
+async def get_validation_config(form_type: str):
+    """Get validation configuration for client-side JavaScript."""
+    config = get_client_validation_config(form_type)
+    return {"config": config}

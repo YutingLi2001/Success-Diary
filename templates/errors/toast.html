@@ -1,0 +1,108 @@
+<!-- Toast notification for network errors and system messages -->
+<div class="error-toast fixed top-4 right-4 z-50 min-w-80 max-w-md transform transition-all duration-300 ease-out"
+     data-error-id="{{ error.error_id }}"
+     data-error-code="{{ error.code }}"
+     data-error-severity="{{ error.severity }}"
+     data-error-context="{{ error.context }}"
+     id="error-toast-{{ error.error_id }}"
+     role="alert"
+     aria-live="assertive">
+  
+  <div class="flex items-center justify-between gap-3 p-4 rounded-lg shadow-lg border {% if error.severity == 'error' %}bg-red-50 border-red-200 text-red-800{% elif error.severity == 'warning' %}bg-yellow-50 border-yellow-200 text-yellow-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %}">
+    
+    <!-- Toast Icon -->
+    <div class="flex-shrink-0 text-lg">
+      {% if error.severity == "error" %}
+        <span aria-hidden="true">❌</span>
+      {% elif error.severity == "warning" %}
+        <span aria-hidden="true">⚠️</span>
+      {% else %}
+        <span aria-hidden="true">ℹ️</span>
+      {% endif %}
+    </div>
+    
+    <!-- Toast Content -->
+    <div class="flex-1">
+      <p class="font-medium">{{ error.message }}</p>
+    </div>
+    
+    <!-- Toast Actions -->
+    <div class="flex items-center gap-2">
+      {% if error.recoverable %}
+        {% if error.context == "network" %}
+          <button type="button" 
+                  onclick="handleToastAction('{{ error.context }}', '{{ error.error_id }}')" 
+                  class="px-3 py-1 text-sm border border-current bg-transparent hover:bg-current hover:text-white rounded transition-colors">
+            Retry
+          </button>
+        {% endif %}
+      {% endif %}
+      
+      <!-- Close Button -->
+      <button type="button" 
+              onclick="dismissToast('{{ error.error_id }}')" 
+              class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors ml-2"
+              aria-label="Dismiss notification">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Toast specific JavaScript
+function dismissToast(errorId) {
+  const toast = document.getElementById(`error-toast-${errorId}`);
+  if (toast) {
+    // Add fade out animation
+    toast.style.transform = 'translateX(100%)';
+    toast.style.opacity = '0';
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }
+}
+
+function handleToastAction(context, errorId) {
+  switch(context) {
+    case 'network':
+      retryLastRequest();
+      dismissToast(errorId);
+      break;
+    default:
+      dismissToast(errorId);
+  }
+}
+
+// Auto-dismiss toast after 5 seconds unless it's an error that needs user action
+setTimeout(() => {
+  const toast = document.getElementById('error-toast-{{ error.error_id }}');
+  if (toast && '{{ error.context }}' !== 'network') {
+    // Only auto-dismiss non-network errors (network errors should stay until user acts)
+    toast.style.transform = 'translateX(100%)';
+    toast.style.opacity = '0';
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }
+}, 5000);
+
+// Handle initial animation
+document.addEventListener('DOMContentLoaded', function() {
+  const toast = document.getElementById('error-toast-{{ error.error_id }}');
+  if (toast) {
+    // Start from off-screen
+    toast.style.transform = 'translateX(100%)';
+    toast.style.opacity = '0';
+    
+    // Animate in
+    setTimeout(() => {
+      toast.style.transform = 'translateX(0)';
+      toast.style.opacity = '1';
+    }, 100);
+  }
+});
+</script>
