@@ -18,6 +18,7 @@ if not exist "app\main.py" (
 
 :: Check if database exists
 if exist "db.sqlite3" (
+    set "db_file=db.sqlite3"
     goto prompt
 ) else (
     echo No database file found (db.sqlite3)
@@ -39,9 +40,9 @@ goto ask
 
 :delete
 echo Proceeding with database reset...
-echo Deleting database...
-del db.sqlite3 2>nul
-if exist "db.sqlite3" (
+echo Deleting database: %db_file%
+del "%db_file%" 2>nul
+if exist "%db_file%" (
     echo ERROR: Failed to delete database!
     echo The file may be in use by the server or another process.
     echo Please stop the server first and try again.

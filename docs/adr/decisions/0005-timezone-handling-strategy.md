@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted - **Updated 2025-07-19** with One Entry Per Day refinement
 
 ## Context
 
@@ -98,9 +98,73 @@ def get_entries_for_date(user_id: int, target_date: date, timezone: str):
 3. **Travel Scenarios**: Auto-detection continues unless manual preference set
 4. **Edge Cases**: Users can override detection for VPN/proxy scenarios
 
+## Update: One Entry Per Day Strategy (2025-07-19)
+
+### Additional Context
+
+The application enforces a "one entry per day" constraint to support habit building and structured emotional reflection. This constraint requires careful timezone handling to prevent gaming while supporting legitimate travel scenarios.
+
+### Refined Decision for One Entry Per Day
+
+**Simplified Auto-Detection Approach:**
+- Use browser auto-detection as the primary timezone source
+- Remove manual override complexity for MVP simplicity  
+- Implement straightforward daily constraint logic
+
+**Travel Logic:**
+- **Forward Travel**: Allow entry creation when traveling to later timezone (new date)
+- **Backward Travel**: Block entry creation when traveling to earlier timezone (existing date occupied)
+- **Rationale**: Prevents gaming while allowing natural "new day" progression
+
+### Updated Implementation
+
+**Simplified Business Logic:**
+```python
+def can_create_entry_today(user: User) -> bool:
+    """Simple one-entry-per-day validation with auto-detected timezone"""
+    today_local = get_user_local_date(user)  # Auto-detected timezone
+    existing_entry = get_entry_for_date(user, today_local)
+    return existing_entry is None
+
+def get_user_local_date(user: User) -> date:
+    """Get current date in user's auto-detected timezone"""
+    user_timezone = get_user_effective_timezone(user)  # Auto-detection priority
+    user_tz = pytz.timezone(user_timezone)
+    return datetime.now(user_tz).date()
+```
+
+**User Experience:**
+- **New Date Available**: "Create today's entry" 
+- **Date Occupied**: "You already journaled today. [View/Edit Entry]"
+- **No Complex Gaming Prevention**: Keep simple, handle abuse if it becomes actual problem
+
+### Decision Rationale
+
+1. **Simplicity**: Avoid over-engineering complex anti-gaming systems for MVP
+2. **User Mental Model**: "New day = new entry" matches natural expectation
+3. **MVP Focus**: Solve 90% of use cases with minimal complexity
+4. **Gaming Tolerance**: Personal journal apps don't need fortress-level security
+5. **Roadmap Alignment**: Matches planned draft system integration
+
+### Updated Consequences
+
+**Additional Positive:**
+- Dramatically simplified implementation (3 lines of core logic)
+- Clear user experience without confusing edge case handling
+- Faster development velocity for MVP features
+
+**Additional Negative:**
+- Westward travel temporarily blocks journal creation
+- Potential for timezone gaming (accepted risk for MVP)
+
+**Mitigation:**
+- Monitor user feedback for actual pain points vs. theoretical concerns
+- Draft system (planned V1.1) will provide workaround for edge cases
+
 ## References
 
 - JavaScript Intl.DateTimeFormat documentation
 - Python pytz timezone handling
 - Web timezone best practices
 - Original analysis: `docs/requirements/remaining_requirements_analysis.md` (Section 8)
+- Implementation decision discussion: `docs/planning/todo.md` (2025-07-19)

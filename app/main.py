@@ -6,8 +6,8 @@ from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 from pathlib import Path
 from app.database import engine, init_db, get_session
-from app.models import Entry, User, UserCreate, UserRead, UserUpdate
-from app.timezone_utils import get_user_local_date
+from app.models import Entry, EntryUpdate, EntryRead, User, UserCreate, UserRead, UserUpdate
+from app.timezone_utils import get_user_local_date, format_user_timestamp, get_user_date_range
 from app.auth import auth_backend, fastapi_users, current_active_user, current_verified_user, google_oauth_router, github_oauth_router
 from fastapi.templating import Jinja2Templates
 
@@ -157,7 +157,22 @@ async def index(request: Request, db: Session = Depends(get_session)):
     print(f"User found: {user.email}, verified: {user.is_verified}")
     # For now, let's allow unverified users to access the dashboard
     entries = db.query(Entry).filter(Entry.user_id == str(user.id)).order_by(Entry.entry_date.desc()).all()
-    return templates.TemplateResponse("dashboard.html", {"request": request, "entries": entries, "user": user})
+    
+    # Check if user can create entry today (one-entry-per-day constraint)
+    db_user = db.query(User).filter(User.id == user.id).first()
+    can_create_today = can_create_entry_today(db_user, db) if db_user else False
+    existing_entry_today = None
+    if not can_create_today and db_user:
+        today_local = get_user_local_date(db_user)
+        existing_entry_today = get_entry_for_date(db_user, today_local, db)
+    
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request, 
+        "entries": entries, 
+        "user": user,
+        "can_create_today": can_create_today,
+        "existing_entry_today": existing_entry_today
+    })
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -198,11 +213,7 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
         month = entry.entry_date.month
         years.add(year)
         
-        # Create search content for filtering
-        search_content = f"{entry.success_1} {entry.success_2 or ''} {entry.success_3 or ''} "
-        search_content += f"{entry.gratitude_1} {entry.gratitude_2 or ''} {entry.gratitude_3 or ''} "
-        search_content += f"{entry.anxiety_1} {entry.anxiety_2 or ''} {entry.anxiety_3 or ''}"
-        entry.search_content = search_content
+        # Note: search content will be generated in template for filtering
         
         period_key = f"{year}-{month:02d}"
         entries_by_period[period_key].append(entry)
@@ -241,6 +252,7 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
         "entries_by_period": periods_list,
         "total_entries": total_entries,
         "avg_score": avg_score,
+        "format_user_timestamp": format_user_timestamp,
         "unique_months": unique_months,
         "streak_days": streak_days,
         "years": sorted(years, reverse=True)
@@ -266,7 +278,13 @@ async def settings_page(request: Request):
     if not user.is_verified:
         return RedirectResponse("/verify?email=" + user.email, status_code=303)
     
-    return templates.TemplateResponse("settings.html", {"request": request, "user": user})
+    # Import here to avoid circular import
+    # Simplified timezone handling - no manual override needed
+    
+    return templates.TemplateResponse("settings.html", {
+        "request": request, 
+        "user": user
+    })
 
 
 @app.get("/debug-auth")
@@ -441,6 +459,49 @@ async def logout(request: Request):
     return response
 
 
+# One-entry-per-day constraint helper functions
+def get_entry_for_date(user: User, target_date: date, db: Session) -> Entry | None:
+    """
+    Get existing entry for user on specific date.
+    
+    Args:
+        user: User model instance
+        target_date: Date to check in user's local timezone
+        db: Database session
+        
+    Returns:
+        Entry if exists, None otherwise
+    """
+    # Get UTC date range for the target date in user's timezone
+    start_utc, end_utc = get_user_date_range(user, target_date)
+    
+    # Query for entries within this date range
+    existing_entry = db.query(Entry).filter(
+        Entry.user_id == str(user.id),
+        Entry.created_at >= start_utc,
+        Entry.created_at <= end_utc
+    ).first()
+    
+    return existing_entry
+
+
+def can_create_entry_today(user: User, db: Session) -> bool:
+    """
+    Check if user can create an entry for today.
+    Implements simple one-entry-per-day constraint using auto-detected timezone.
+    
+    Args:
+        user: User model instance
+        db: Database session
+        
+    Returns:
+        bool: True if user can create entry, False if already exists
+    """
+    today_local = get_user_local_date(user)  # Auto-detected timezone
+    existing_entry = get_entry_for_date(user, today_local, db)
+    return existing_entry is None
+
+
 @app.post("/add")
 async def add_entry(
     request: Request,
@@ -473,7 +534,22 @@ async def add_entry(
     if not db_user:
         return RedirectResponse("/login", status_code=303)
     
-    print(f"Refreshed user timezone data: user_timezone={db_user.user_timezone}, auto_detect={db_user.timezone_auto_detect}, detected={db_user.last_detected_timezone}")
+    print(f"Refreshed user timezone data: detected={db_user.last_detected_timezone}, legacy={db_user.timezone}")
+    
+    # Check one-entry-per-day constraint
+    if not can_create_entry_today(db_user, db):
+        today_local = get_user_local_date(db_user)
+        existing_entry = get_entry_for_date(db_user, today_local, db)
+        
+        # Return error with link to existing entry
+        if request.headers.get("HX-Request"):
+            return HTMLResponse(
+                f'<div class="error-message">You already created an entry for {today_local.strftime("%B %d, %Y")}. '
+                f'<a href="/entries/{existing_entry.id}" class="text-blue-600 hover:text-blue-800">View/Edit Entry</a></div>'
+            )
+        else:
+            # For regular form submission, redirect to existing entry
+            return RedirectResponse(f"/entries/{existing_entry.id}", status_code=303)
     
     entry = Entry(
         user_id=str(user.id),
@@ -497,6 +573,101 @@ async def add_entry(
         return HTMLResponse('<div class="success-message">Entry saved successfully!</div>')
     
     return RedirectResponse("/", status_code=303)
+
+@app.put("/entries/{entry_id}")
+async def update_entry(
+    entry_id: int,
+    request: Request,
+    success_1: str = Form(None),
+    success_2: str = Form(None),
+    success_3: str = Form(None),
+    gratitude_1: str = Form(None),
+    gratitude_2: str = Form(None),
+    gratitude_3: str = Form(None),
+    anxiety_1: str = Form(None),
+    anxiety_2: str = Form(None),
+    anxiety_3: str = Form(None),
+    score: int = Form(None),
+    journal: str = Form(None),
+    db: Session = Depends(get_session),
+):
+    """Update an existing entry"""
+    # Get the current user
+    user = await get_current_user_safe(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    if not user.is_verified:
+        raise HTTPException(status_code=403, detail="User not verified")
+    
+    # Get the entry and verify ownership
+    entry = db.query(Entry).filter(Entry.id == entry_id, Entry.user_id == str(user.id)).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    
+    # Update only provided fields
+    update_data = {}
+    if success_1 is not None:
+        update_data["success_1"] = success_1
+    if success_2 is not None:
+        update_data["success_2"] = success_2 if success_2.strip() else None
+    if success_3 is not None:
+        update_data["success_3"] = success_3 if success_3.strip() else None
+    if gratitude_1 is not None:
+        update_data["gratitude_1"] = gratitude_1
+    if gratitude_2 is not None:
+        update_data["gratitude_2"] = gratitude_2 if gratitude_2.strip() else None
+    if gratitude_3 is not None:
+        update_data["gratitude_3"] = gratitude_3 if gratitude_3.strip() else None
+    if anxiety_1 is not None:
+        update_data["anxiety_1"] = anxiety_1
+    if anxiety_2 is not None:
+        update_data["anxiety_2"] = anxiety_2 if anxiety_2.strip() else None
+    if anxiety_3 is not None:
+        update_data["anxiety_3"] = anxiety_3 if anxiety_3.strip() else None
+    if score is not None:
+        if score < 1 or score > 10:
+            raise HTTPException(status_code=400, detail="Score must be between 1 and 10")
+        update_data["score"] = score
+    if journal is not None:
+        update_data["journal"] = journal if journal.strip() else None
+    
+    # Apply updates
+    for field, value in update_data.items():
+        setattr(entry, field, value)
+    
+    # The updated_at field will be automatically set by the SQLAlchemy event listener
+    db.commit()
+    db.refresh(entry)
+    
+    print(f"Entry {entry_id} updated successfully")
+    return RedirectResponse("/entries", status_code=303)
+
+@app.get("/entries/{entry_id}", response_class=HTMLResponse)
+async def get_entry(
+    entry_id: int,
+    request: Request,
+    db: Session = Depends(get_session)
+):
+    """Get a specific entry for editing"""
+    # Get the current user
+    user = await get_current_user_safe(request)
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    
+    if not user.is_verified:
+        return RedirectResponse("/verify?email=" + user.email, status_code=303)
+    
+    # Get the entry and verify ownership
+    entry = db.query(Entry).filter(Entry.id == entry_id, Entry.user_id == str(user.id)).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    
+    return templates.TemplateResponse("edit_entry.html", {
+        "request": request,
+        "user": user,
+        "entry": entry
+    })
 
 
 # Test endpoints for error handling (development only)
@@ -537,78 +708,31 @@ async def test_http_error(request: Request):
 
 
 # Timezone management endpoints
-@app.post("/api/user/timezone")
-async def save_user_timezone(
+@app.post("/api/user/update-detected-timezone")
+async def update_detected_timezone(
     request: Request,
     user: User = Depends(current_active_user)
 ):
-    """Save user's timezone preference and detected timezone with mutual exclusivity."""
+    """Simple auto-detection timezone update."""
     try:
         data = await request.json()
-        timezone = data.get('timezone')
-        detected = data.get('detected')
-        auto_detect = data.get('auto_detect', True)
+        detected = data.get('detected_timezone')
         
-        # Update user's timezone information
-        db = next(get_session())
-        db_user = db.query(User).filter(User.id == user.id).first()
-        
-        if db_user:
-            # Handle mutual exclusivity between manual and auto-detection
-            if not timezone or timezone == '':
-                # User selected "Use automatic detection" - clear manual preference
-                db_user.user_timezone = None
-                db_user.timezone_auto_detect = True
-                print(f"Cleared manual timezone for {user.email}, enabled auto-detection")
-            else:
-                # User selected a manual timezone - disable auto-detection
-                db_user.user_timezone = timezone
-                db_user.timezone_auto_detect = False
-                print(f"Set manual timezone for {user.email}: {timezone}, disabled auto-detection")
+        if detected:
+            # Update detected timezone in sync database
+            db = next(get_session())
+            db_user = db.query(User).filter(User.id == user.id).first()
             
-            # Always update detected timezone if provided
-            if detected:
+            if db_user:
                 db_user.last_detected_timezone = detected
+                db.commit()
                 print(f"Updated detected timezone for {user.email}: {detected}")
-            
-            db.commit()
-            
-        return {"success": True, "timezone": timezone or "auto-detect"}
+        
+        return {"success": True, "detected_timezone": detected}
         
     except Exception as e:
-        print(f"Error saving timezone: {e}")
-        raise HTTPException(status_code=400, detail="Failed to save timezone")
-
-
-@app.get("/api/user/timezone")
-async def get_user_timezone(user: User = Depends(current_active_user)):
-    """Get user's current timezone settings."""
-    try:
-        db = next(get_session())
-        db_user = db.query(User).filter(User.id == user.id).first()
-        
-        if not db_user:
-            raise HTTPException(status_code=404, detail="User not found")
-        
-        # Determine effective timezone using priority chain
-        effective_timezone = (
-            db_user.user_timezone or 
-            db_user.last_detected_timezone or 
-            db_user.timezone or 
-            'UTC'
-        )
-        
-        return {
-            "user_timezone": db_user.user_timezone,
-            "timezone_auto_detect": db_user.timezone_auto_detect,
-            "last_detected_timezone": db_user.last_detected_timezone,
-            "effective_timezone": effective_timezone,
-            "legacy_timezone": db_user.timezone
-        }
-        
-    except Exception as e:
-        print(f"Error getting timezone: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get timezone")
+        print(f"Error updating detected timezone: {e}")
+        raise HTTPException(status_code=400, detail="Failed to update timezone")
 
 
 # Validation configuration endpoint

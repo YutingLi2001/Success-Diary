@@ -1,7 +1,7 @@
 # update-development-journal-and-git
 
 ## Goal  
-Update today’s dev journal **and** determine the correct Git branch for pushing current work.
+Update today's dev journal **and** execute complete Git workflow including committing and pushing current work to the appropriate branch.
 
 ---
 
@@ -22,12 +22,12 @@ Append **one** entry to `docs/logs/development-journal.md` following all rules i
 - Auto-increment the Dev Log number  
 - Place the entry after the file header but before previous entries (chronological order)
 
-### B. Git Action Plan  
-Based on roadmap + today’s todo + git-workflow.md:  
-1. Decide which **branch** today’s work should be pushed to  
+### B. Git Action Plan & Execution  
+Based on roadmap + today's todo + git-workflow.md:  
+1. Decide which **branch** today's work should be pushed to  
 2. If none fits, propose a new branch (e.g., `feature/<kebab-case-name>`) and explain why  
-3. Provide **Git CLI commands** to execute the plan  
-4. Add a brief rationale after each command
+3. **Execute the complete Git workflow**: commit changes and push to appropriate branch  
+4. Provide **Git CLI commands** with brief rationale after each command
 
 ---
 
@@ -40,11 +40,12 @@ Based on roadmap + today’s todo + git-workflow.md:
 5. Review the current git branch strategy (or use default if git-workflow.md unavailable)  
 6. Decide the correct branch to push work to  
 7. If needed, create a new branch based on the rules in git-workflow.md  
-8. Output git commands (only execute those that apply to current situation):  
-   - Switch/create branch  
-   - Commit changes  
-   - Push  
-   - Create pull request  
+8. **Execute git workflow** (run all commands that apply to current situation):  
+   - Switch/create branch (if needed)
+   - Stage all changes (`git add .`)
+   - Commit changes with descriptive message
+   - **Push to origin** with upstream tracking
+   - Create pull request (if needed)
    - (Optional) Merge  
 9. Justify each decision briefly  
 10. Include rollback plan if git operations fail  
@@ -131,7 +132,7 @@ git pull origin <base-branch>                 # Reason: update to latest base st
 git checkout -b <new-branch>                  # Reason: create new feature branch (if needed)
 git add .                                      # Reason: stage all current work
 git commit -m "<type>: <message>"             # Reason: descriptive commit message
-git push -u origin <branch-name>              # Reason: push branch and track upstream
+git push -u origin <branch-name>              # Reason: push branch and track upstream (REQUIRED)
 gh pr create --base <target> --title "<title>" --body "<summary>"  # Reason: initiate review process
 ```
 
