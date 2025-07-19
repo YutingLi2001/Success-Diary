@@ -1,0 +1,8 @@
+1.1 good
+others: one warning message when I go to settings page from google console: (index):64 cdn.tailwindcss.com should not be used in production. To use Tailwind CSS in production, install it as a PostCSS plugin or use the Tailwind CLI: https://tailwindcss.com/docs/installation
+1.2 is says Timezone saved successfully but not Timezone saved for user [email]: [timezone] (detected: [timezone])
+time zone's Type is fetch, method and status and Request URL are correct 
+2.1 good 
+2.2 when turning off Automatic Timezone Detection, current timezone is UTC, when turned on, it's  America/Regina
+2.3 good
+2.4 good  

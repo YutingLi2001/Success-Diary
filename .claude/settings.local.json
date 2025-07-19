@@ -17,8 +17,24 @@
       "Bash(git commit:*)",
       "Bash(git checkout:*)",
       "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
       "Bash(mailpit:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(sqlite3:*)",
+      "Bash(scriptswindowsreset-db.bat)",
+      "Bash(del db.sqlite3)",
+      "Bash(timeout:*)",
+      "Bash(true)",
+      "Bash(venvScripts:*)",
+      "Bash(python:*)",
+      "Bash(deactivate)",
+      "Bash(pip install:*)",
+      "Bash(scriptswindowsutilitiesinstall-deps.bat)",
+      "Bash(./venv/Scripts/activate)",
+      "Bash(venv/Scripts/pip.exe install:*)",
+      "Bash(node:*)",
+      "Bash(\"venv\\Scripts\\pip.exe\" install aiosqlite)"
     ],
     "deny": []
   }

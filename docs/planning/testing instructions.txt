@@ -1,0 +1,179 @@
+ 🧪 Manual Testing - Exact Step-by-Step Instructions
+
+  Based on our automated testing results, here are the precise manual steps to verify the remaining 15% of
+  functionality:
+
+  Pre-Test Setup
+
+  - ✅ Server running at http://localhost:8000
+  - ✅ Browser developer tools open (F12)
+  - ✅ Console tab visible for monitoring
+
+  ---
+  Test Suite 1: Browser Timezone Detection (5 minutes)
+
+  Test 1.1: Automatic Detection on Dashboard
+
+  1. Navigate to http://localhost:8000
+  2. Login with your existing account
+  3. Open Console (F12 → Console tab)
+  4. Look for logs:
+  Browser timezone detected: [YOUR_TIMEZONE]
+  Timezone system initialized with: [YOUR_TIMEZONE]
+  5. Expected Result: Should detect America/Regina (your actual timezone)
+
+  Test 1.2: Verify API Communication
+
+  1. Stay on Dashboard
+  2. Check Console for:
+  Timezone saved for user [email]: [timezone] (detected: [timezone])
+  3. Check Network Tab: Look for successful POST /api/user/timezone (Status: 200)
+  4. Expected Result: API call successful with your detected timezone
+
+  ---
+  Test Suite 2: Settings Page Functionality (10 minutes)
+
+  Test 2.1: Settings Page Access
+
+  1. Navigate to http://localhost:8000/settings
+  2. Verify Elements Present:
+    - ✅ "Automatic Timezone Detection" toggle (should be ON)
+    - ✅ "Detected: America/Regina" in blue text
+    - ✅ "Manual Timezone Override" dropdown
+    - ✅ "Current timezone: America/Regina" in gray box
+
+  Test 2.2: Auto-Detection Toggle
+
+  1. Turn OFF "Automatic Timezone Detection" toggle
+  2. Expected: "Current timezone" should update immediately
+  3. Turn ON toggle again
+  4. Expected: Should revert to detected timezone
+  5. Console Check: Look for timezone manager logs
+
+  Test 2.3: Manual Override Testing
+
+  1. Select "Europe/London" from dropdown
+  2. Expected: "Current timezone" shows "Europe/London" immediately
+  3. Select "Asia/Tokyo"
+  4. Expected: "Current timezone" shows "Asia/Tokyo" immediately
+  5. Select "Use automatic detection"
+  6. Expected: Reverts to "America/Regina"
+
+  Test 2.4: Settings Persistence
+
+  1. Set manual timezone to "Europe/Paris"
+  2. Click "Save Profile Changes"
+  3. Expected: Green "Settings saved successfully!" toast appears
+  4. Refresh page (F5)
+  5. Expected: Settings page still shows "Europe/Paris" selected
+  6. Reset to "Use automatic detection" and save
+
+  ---
+  Test Suite 3: Entry Date Logic (15 minutes)
+
+  Test 3.1: Entry with Auto-Detection
+
+  1. Ensure auto-detection is ON in settings
+  2. Go to Dashboard (http://localhost:8000)
+  3. Fill out daily entry form:
+    - Success 1: "Manual testing timezone system"
+    - Gratitude 1: "Automated testing passed"
+    - Anxiety 1: "Testing edge cases"
+    - Score: 4
+  4. Submit form
+  5. Go to "All Entries" page
+  6. Expected: Entry shows today's date in YOUR local timezone
+
+  Test 3.2: Entry with Different Timezone
+
+  1. Go to Settings
+  2. Set manual timezone to "Asia/Tokyo" (very different from yours)
+  3. Save settings
+  4. Go to Dashboard
+  5. Create new entry:
+    - Success 1: "Testing Tokyo timezone"
+    - Gratitude 1: "Different timezone working"
+    - Anxiety 1: "Date calculation testing"
+    - Score: 5
+  6. Submit and check entries
+  7. Expected: Entry date should reflect Tokyo time (might be tomorrow if significant time difference)
+
+  Test 3.3: Reset and Verify
+
+  1. Return to Settings
+  2. Reset to "Use automatic detection"
+  3. Save settings
+  4. Verify current timezone shows your local timezone again
+
+  ---
+  Test Suite 4: Priority Logic Verification (5 minutes)
+
+  Test 4.1: Priority Chain Testing
+
+  1. Start with auto-detection ON (no manual preference)
+  2. Verify: Uses detected timezone ✅
+  3. Set manual to "Europe/London"
+  4. Verify: Uses "Europe/London" (manual wins) ✅
+  5. Turn OFF auto-detection
+  6. Clear manual ("Use automatic detection")
+  7. Verify: Should fallback gracefully ✅
+
+  Test 4.2: Edge Case Testing
+
+  1. Open Console
+  2. Run this command:
+  // Test invalid timezone handling
+  window.timezoneManager.updatePreference('Invalid/Timezone', true)
+  3. Expected: Should handle gracefully without breaking the page
+
+  ---
+  Test Suite 5: Cross-Page Integration (5 minutes)
+
+  Test 5.1: Session Persistence
+
+  1. Set timezone in Settings to "America/New_York"
+  2. Save
+  3. Navigate to Dashboard
+  4. Check Console: Should show effective timezone as "America/New_York"
+  5. Navigate to Entries
+  6. Return to Settings
+  7. Expected: Still shows "America/New_York" selected
+
+  Test 5.2: Logout/Login Persistence
+
+  1. Logout (button in nav)
+  2. Login again
+  3. Go to Settings
+  4. Expected: Your timezone preference should be remembered
+  5. Dashboard: Should auto-detect timezone on fresh login
+
+  ---
+  🎯 Expected Results Summary
+
+  After completing all tests, you should observe:
+
+  ✅ Auto-Detection: Your browser timezone detected correctly✅ Settings UI: All controls working and updating in
+  real-time✅ API Integration: Successful saves with network confirmation✅ Entry Dates: Entries created with
+  correct local dates✅ Priority Logic: Manual → Auto → Fallback chain working✅ Persistence: Settings survive page
+   refresh and login/logout
+
+  ---
+  🚨 Troubleshooting Guide
+
+  If timezone detection fails:
+  - Check console for JavaScript errors
+  - Verify /static/js/timezone-detection.js loads (Network tab)
+
+  If settings don't save:
+  - Check Network tab for failed POST /api/user/timezone
+  - Look for authentication errors
+
+  If dates are wrong:
+  - Check that get_user_local_date() is being used in entry creation
+  - Verify timezone is being passed correctly to backend
+
+  ---
+  ⏱️ Total Testing Time: ~40 minutes
+
+  This manual testing will verify the remaining 15% of functionality that requires browser interaction, completing
+  your full timezone system validation!
