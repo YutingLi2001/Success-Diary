@@ -1,3 +1,18 @@
+## 2025-07-19 – Dev Log #7: Timezone Auto-Detection UX Fixes
+
+### Focus
+Fix critical auto-detection mutual exclusivity bug and implement timezone setting persistence across page refreshes.
+
+### Progress
+- Completed comprehensive fix for auto-detection UX logic failure that was blocking all timezone testing
+- Implemented true mutual exclusivity between auto-detection toggle and manual timezone selection in settings UI
+- Updated API endpoint to properly handle empty timezone values and clear conflicting preferences in database
+- Enhanced JavaScript logic to automatically disable opposing setting when user makes selection
+
+### Next Steps
+- User testing of auto-detection fixes to verify settings persist across page refreshes
+- Test entry date logic once timezone UI is confirmed reliable
+
 ## 2025-06-09 – Dev Log #1: Project Foundation
 
 ### Focus

@@ -7,6 +7,13 @@
   <script src="https://unpkg.com/htmx.org@1.9.9"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
+  <!-- User timezone data for JavaScript -->
+  <div id="user-timezone-data" 
+       data-user-timezone="{{ user.user_timezone or '' }}"
+       data-timezone-auto-detect="{{ user.timezone_auto_detect|default(true)|string|lower }}"
+       data-last-detected-timezone="{{ user.last_detected_timezone or '' }}"
+       style="display: none;"></div>
+
   <!-- Navigation Header -->
   <nav class="bg-white shadow-sm border-b">
     <div class="max-w-4xl mx-auto px-6 py-4">
@@ -165,6 +172,9 @@
   
   <!-- Validation Engine -->
   <script src="/static/js/validation-engine.js"></script>
+  
+  <!-- Timezone Detection -->
+  <script src="/static/js/timezone-detection.js"></script>
   
   <!-- Initialize Progressive Validation -->
   <script>

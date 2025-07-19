@@ -7,6 +7,7 @@ from sqlmodel import Session
 from pathlib import Path
 from app.database import engine, init_db, get_session
 from app.models import Entry, User, UserCreate, UserRead, UserUpdate
+from app.timezone_utils import get_user_local_date
 from app.auth import auth_backend, fastapi_users, current_active_user, current_verified_user, google_oauth_router, github_oauth_router
 from fastapi.templating import Jinja2Templates
 
@@ -466,9 +467,17 @@ async def add_entry(
     
     print(f"Adding entry for user: {user.email}, verified: {user.is_verified}")
     
+    # Refresh user from sync database to get latest timezone settings
+    # This ensures we have the most up-to-date timezone data for date calculation
+    db_user = db.query(User).filter(User.id == user.id).first()
+    if not db_user:
+        return RedirectResponse("/login", status_code=303)
+    
+    print(f"Refreshed user timezone data: user_timezone={db_user.user_timezone}, auto_detect={db_user.timezone_auto_detect}, detected={db_user.last_detected_timezone}")
+    
     entry = Entry(
         user_id=str(user.id),
-        entry_date=date.today(),
+        entry_date=get_user_local_date(db_user),  # Use refreshed user object
         success_1=success_1,
         success_2=success_2 if success_2.strip() else None,
         success_3=success_3 if success_3.strip() else None,
@@ -525,6 +534,81 @@ async def test_server_error(request: Request):
 async def test_http_error(request: Request):
     """Test HTTP error handling."""
     raise HTTPException(status_code=404, detail="Test resource not found")
+
+
+# Timezone management endpoints
+@app.post("/api/user/timezone")
+async def save_user_timezone(
+    request: Request,
+    user: User = Depends(current_active_user)
+):
+    """Save user's timezone preference and detected timezone with mutual exclusivity."""
+    try:
+        data = await request.json()
+        timezone = data.get('timezone')
+        detected = data.get('detected')
+        auto_detect = data.get('auto_detect', True)
+        
+        # Update user's timezone information
+        db = next(get_session())
+        db_user = db.query(User).filter(User.id == user.id).first()
+        
+        if db_user:
+            # Handle mutual exclusivity between manual and auto-detection
+            if not timezone or timezone == '':
+                # User selected "Use automatic detection" - clear manual preference
+                db_user.user_timezone = None
+                db_user.timezone_auto_detect = True
+                print(f"Cleared manual timezone for {user.email}, enabled auto-detection")
+            else:
+                # User selected a manual timezone - disable auto-detection
+                db_user.user_timezone = timezone
+                db_user.timezone_auto_detect = False
+                print(f"Set manual timezone for {user.email}: {timezone}, disabled auto-detection")
+            
+            # Always update detected timezone if provided
+            if detected:
+                db_user.last_detected_timezone = detected
+                print(f"Updated detected timezone for {user.email}: {detected}")
+            
+            db.commit()
+            
+        return {"success": True, "timezone": timezone or "auto-detect"}
+        
+    except Exception as e:
+        print(f"Error saving timezone: {e}")
+        raise HTTPException(status_code=400, detail="Failed to save timezone")
+
+
+@app.get("/api/user/timezone")
+async def get_user_timezone(user: User = Depends(current_active_user)):
+    """Get user's current timezone settings."""
+    try:
+        db = next(get_session())
+        db_user = db.query(User).filter(User.id == user.id).first()
+        
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Determine effective timezone using priority chain
+        effective_timezone = (
+            db_user.user_timezone or 
+            db_user.last_detected_timezone or 
+            db_user.timezone or 
+            'UTC'
+        )
+        
+        return {
+            "user_timezone": db_user.user_timezone,
+            "timezone_auto_detect": db_user.timezone_auto_detect,
+            "last_detected_timezone": db_user.last_detected_timezone,
+            "effective_timezone": effective_timezone,
+            "legacy_timezone": db_user.timezone
+        }
+        
+    except Exception as e:
+        print(f"Error getting timezone: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get timezone")
 
 
 # Validation configuration endpoint
