@@ -175,41 +175,57 @@
 
     <!-- Recent Entries -->
     <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6">
-      <h2 class="text-lg md:text-xl font-semibold mb-4 text-gray-800">Recent Entries</h2>
-      <div class="space-y-4">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg md:text-xl font-semibold text-gray-800">Recent Entries</h2>
+        <a href="/entries" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View all →</a>
+      </div>
+      <div class="space-y-3">
         {% for e in entries %}
-          <div class="border border-gray-200 p-3 md:p-4 rounded-lg bg-gray-50">
-            <div class="flex flex-col xs:flex-row xs:justify-between xs:items-center mb-3 gap-2">
-              <span class="font-semibold text-gray-800 text-sm md:text-base">{{ e.entry_date }}</span>
-              <span class="text-sm bg-purple-100 text-purple-800 px-3 py-1 rounded-full self-start xs:self-auto">{{ e.score }}/5</span>
+          <a href="/entries/{{ e.id }}/view" class="block bg-white border border-gray-200 rounded-lg hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-4 rounded-t-lg">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <div class="flex flex-col">
+                  <div class="font-semibold text-gray-800 text-base md:text-lg">
+                    {% if e.title %}
+                      {{ e.title }}
+                    {% else %}
+                      <script>
+                        document.write(window.EntryTitles ? window.EntryTitles.generateAutoTitle('{{ e.entry_date }}') : '{{ e.entry_date.strftime('%B %d, %Y') }}');
+                      </script>
+                    {% endif %}
+                  </div>
+                  <div class="text-sm text-gray-600">{{ e.entry_date.strftime('%A, %B %d, %Y') }}</div>
+                  {% if e.was_edited %}
+                    <div class="text-xs text-gray-500 mt-1">
+                      Created: {{ format_user_timestamp(user, e.created_at, 'short') }} • 
+                      Edited: {{ format_user_timestamp(user, e.updated_at, 'short') }}
+                    </div>
+                  {% else %}
+                    <div class="text-xs text-gray-500 mt-1">
+                      Created: {{ format_user_timestamp(user, e.created_at, 'short') }}
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full text-sm font-medium">{{ e.score }}/5</span>
+                  {% if e.score >= 4 %}
+                    <span class="text-lg">😊</span>
+                  {% elif e.score >= 3 %}
+                    <span class="text-lg">😐</span>
+                  {% else %}
+                    <span class="text-lg">😔</span>
+                  {% endif %}
+                </div>
+              </div>
             </div>
-            <div class="grid gap-3 text-sm">
-              <div>
-                <div class="font-medium text-green-700 mb-1">Successes:</div>
-                <div class="ml-2 space-y-1">
-                  <div>✨ {{ e.success_1 }}</div>
-                  {% if e.success_2 %}<div>✨ {{ e.success_2 }}</div>{% endif %}
-                  {% if e.success_3 %}<div>✨ {{ e.success_3 }}</div>{% endif %}
-                </div>
-              </div>
-              <div>
-                <div class="font-medium text-blue-700 mb-1">Gratitude:</div>
-                <div class="ml-2 space-y-1">
-                  <div>🙏 {{ e.gratitude_1 }}</div>
-                  {% if e.gratitude_2 %}<div>🙏 {{ e.gratitude_2 }}</div>{% endif %}
-                  {% if e.gratitude_3 %}<div>🙏 {{ e.gratitude_3 }}</div>{% endif %}
-                </div>
-              </div>
-              <div>
-                <div class="font-medium text-red-700 mb-1">Worries:</div>
-                <div class="ml-2 space-y-1">
-                  <div>💭 {{ e.anxiety_1 }}</div>
-                  {% if e.anxiety_2 %}<div>💭 {{ e.anxiety_2 }}</div>{% endif %}
-                  {% if e.anxiety_3 %}<div>💭 {{ e.anxiety_3 }}</div>{% endif %}
-                </div>
+            <!-- Preview Content -->
+            <div class="p-4">
+              <div class="text-gray-700 text-sm">
+                ✨ {{ e.success_1[:60] }}{% if e.success_1|length > 60 %}...{% endif %}
               </div>
             </div>
-          </div>
+          </a>
         {% else %}
           <div class="text-gray-500 text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
             <div class="text-4xl mb-4">📝</div>

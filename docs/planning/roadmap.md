@@ -83,12 +83,13 @@ SuccessDiary is a lightweight daily logging application designed for personal gr
 
 ## 📋 Next Tasks (Dependency Order)
 
-### **Entry Titles with Auto-Generation** ✅ *READY* (dependencies complete: timezone handling ✅, mobile foundation ✅)
+### **Entry Titles with Auto-Generation** ✅ *COMPLETE*
+- **Status**: **✅ 100% COMPLETE** - Locale-based date formatting with custom override
 - **Implementation Tasks**:
-  - [ ] Implement locale-based date formatting with `Intl.DateTimeFormat()`
-  - [ ] Add custom title override capability
-  - [ ] Test format examples: "January 15, 2025" (US), "15. Januar 2025" (DE), "15 January 2025" (UK)
-  - [ ] Review ADR: `docs/adr/decisions/0004-entry-title-auto-generation.md`
+  - [x] ✅ Implement locale-based date formatting with `Intl.DateTimeFormat()`
+  - [x] ✅ Add custom title override capability
+  - [x] ✅ Test format examples: "January 15, 2025" (US), "15. Januar 2025" (DE), "15 January 2025" (UK)
+  - [x] ✅ Review ADR: `docs/adr/decisions/0004-entry-title-auto-generation.md`
 
 ### **Dynamic UI with Progressive Field Display** ✅ *READY* (dependencies complete: responsive design ✅)
 - **Implementation Tasks**:

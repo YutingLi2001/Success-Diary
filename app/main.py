@@ -156,7 +156,7 @@ async def index(request: Request, db: Session = Depends(get_session)):
     
     print(f"User found: {user.email}, verified: {user.is_verified}")
     # For now, let's allow unverified users to access the dashboard
-    entries = db.query(Entry).filter(Entry.user_id == str(user.id)).order_by(Entry.entry_date.desc()).all()
+    entries = db.query(Entry).filter(Entry.user_id == str(user.id)).order_by(Entry.entry_date.desc()).limit(3).all()
     
     # Check if user can create entry today (one-entry-per-day constraint)
     db_user = db.query(User).filter(User.id == user.id).first()
@@ -171,7 +171,8 @@ async def index(request: Request, db: Session = Depends(get_session)):
         "entries": entries, 
         "user": user,
         "can_create_today": can_create_today,
-        "existing_entry_today": existing_entry_today
+        "existing_entry_today": existing_entry_today,
+        "format_user_timestamp": format_user_timestamp
     })
 
 
@@ -582,18 +583,18 @@ async def add_entry(
 async def update_entry(
     entry_id: int,
     request: Request,
-    title: str = Form(None),
-    success_1: str = Form(None),
-    success_2: str = Form(None),
-    success_3: str = Form(None),
-    gratitude_1: str = Form(None),
-    gratitude_2: str = Form(None),
-    gratitude_3: str = Form(None),
-    anxiety_1: str = Form(None),
-    anxiety_2: str = Form(None),
-    anxiety_3: str = Form(None),
-    score: int = Form(None),
-    journal: str = Form(None),
+    title: str = Form(""),
+    success_1: str = Form(""),
+    success_2: str = Form(""),
+    success_3: str = Form(""),
+    gratitude_1: str = Form(""),
+    gratitude_2: str = Form(""),
+    gratitude_3: str = Form(""),
+    anxiety_1: str = Form(""),
+    anxiety_2: str = Form(""),
+    anxiety_3: str = Form(""),
+    score: int = Form(...),
+    journal: str = Form(""),
     db: Session = Depends(get_session),
 ):
     """Update an existing entry"""
@@ -610,34 +611,24 @@ async def update_entry(
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
     
-    # Update only provided fields
+    # Update all fields since form always sends values
     update_data = {}
-    if title is not None:
-        update_data["title"] = title if title.strip() else None
-    if success_1 is not None:
-        update_data["success_1"] = success_1
-    if success_2 is not None:
-        update_data["success_2"] = success_2 if success_2.strip() else None
-    if success_3 is not None:
-        update_data["success_3"] = success_3 if success_3.strip() else None
-    if gratitude_1 is not None:
-        update_data["gratitude_1"] = gratitude_1
-    if gratitude_2 is not None:
-        update_data["gratitude_2"] = gratitude_2 if gratitude_2.strip() else None
-    if gratitude_3 is not None:
-        update_data["gratitude_3"] = gratitude_3 if gratitude_3.strip() else None
-    if anxiety_1 is not None:
-        update_data["anxiety_1"] = anxiety_1
-    if anxiety_2 is not None:
-        update_data["anxiety_2"] = anxiety_2 if anxiety_2.strip() else None
-    if anxiety_3 is not None:
-        update_data["anxiety_3"] = anxiety_3 if anxiety_3.strip() else None
-    if score is not None:
-        if score < 1 or score > 10:
-            raise HTTPException(status_code=400, detail="Score must be between 1 and 10")
-        update_data["score"] = score
-    if journal is not None:
-        update_data["journal"] = journal if journal.strip() else None
+    update_data["title"] = title.strip() if title.strip() else None
+    update_data["success_1"] = success_1.strip()
+    update_data["success_2"] = success_2.strip() if success_2.strip() else None
+    update_data["success_3"] = success_3.strip() if success_3.strip() else None
+    update_data["gratitude_1"] = gratitude_1.strip()
+    update_data["gratitude_2"] = gratitude_2.strip() if gratitude_2.strip() else None
+    update_data["gratitude_3"] = gratitude_3.strip() if gratitude_3.strip() else None
+    update_data["anxiety_1"] = anxiety_1.strip()
+    update_data["anxiety_2"] = anxiety_2.strip() if anxiety_2.strip() else None
+    update_data["anxiety_3"] = anxiety_3.strip() if anxiety_3.strip() else None
+    update_data["journal"] = journal.strip() if journal.strip() else None
+    
+    # Validate score
+    if score < 1 or score > 10:
+        raise HTTPException(status_code=400, detail="Score must be between 1 and 10")
+    update_data["score"] = score
     
     # Apply updates
     for field, value in update_data.items():
@@ -649,6 +640,33 @@ async def update_entry(
     
     print(f"Entry {entry_id} updated successfully")
     return RedirectResponse("/entries", status_code=303)
+
+@app.get("/entries/{entry_id}/view", response_class=HTMLResponse)
+async def view_entry(
+    entry_id: int,
+    request: Request,
+    db: Session = Depends(get_session)
+):
+    """View a specific entry in detail (read-only)"""
+    # Get the current user
+    user = await get_current_user_safe(request)
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    
+    if not user.is_verified:
+        return RedirectResponse("/verify?email=" + user.email, status_code=303)
+    
+    # Get the entry and verify ownership
+    entry = db.query(Entry).filter(Entry.id == entry_id, Entry.user_id == str(user.id)).first()
+    if not entry:
+        return RedirectResponse("/entries", status_code=303)
+    
+    return templates.TemplateResponse("entry_detail.html", {
+        "request": request,
+        "entry": entry,
+        "user": user,
+        "format_user_timestamp": format_user_timestamp
+    })
 
 @app.get("/entries/{entry_id}", response_class=HTMLResponse)
 async def get_entry(
@@ -673,7 +691,8 @@ async def get_entry(
     return templates.TemplateResponse("edit_entry.html", {
         "request": request,
         "user": user,
-        "entry": entry
+        "entry": entry,
+        "format_user_timestamp": format_user_timestamp
     })
 
 

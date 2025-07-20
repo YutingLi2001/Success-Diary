@@ -57,6 +57,11 @@ class Entry(SQLModel, table=True):
     anxiety_3: str | None = Field(default=None)
     score: int
     journal: str | None = Field(default=None)  # Free-form reflection field
+    
+    @property
+    def was_edited(self) -> bool:
+        """Check if entry was edited after creation"""
+        return self.updated_at > self.created_at
 
 # SQLAlchemy event listener to automatically update 'updated_at' timestamp
 @event.listens_for(Entry, 'before_update')
