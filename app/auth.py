@@ -58,6 +58,78 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
+        
+        # Generate and send verification email immediately after registration
+        import random
+        from datetime import datetime, timedelta
+        
+        verification_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        
+        # Store the code in the user record with expiration
+        from app.database import get_async_session
+        from sqlalchemy import update
+        async for session in get_async_session():
+            # Update user with verification code using the user's ID to avoid session conflicts
+            await session.execute(
+                update(User)
+                .where(User.id == user.id)
+                .values(
+                    verification_code=verification_code,
+                    verification_code_expires=datetime.utcnow() + timedelta(minutes=10)
+                )
+            )
+            await session.commit()
+            break
+        
+        message = MessageSchema(
+            subject="Success Diary - Verify your email",
+            recipients=[user.email],
+            body=f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="color: #10b981; margin-bottom: 10px;">Welcome to Success Diary!</h1>
+                        <p style="color: #6b7280; font-size: 16px;">Complete your registration</p>
+                    </div>
+                    
+                    <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+                        <h2 style="color: #374151; margin-top: 0; margin-bottom: 16px;">Your verification code:</h2>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <span style="display: inline-block; background-color: #10b981; color: white; font-size: 32px; font-weight: bold; padding: 12px 24px; border-radius: 8px; letter-spacing: 4px; font-family: 'Courier New', monospace;">
+                                {verification_code}
+                            </span>
+                        </div>
+                        <p style="color: #6b7280; margin-bottom: 0; text-align: center;">
+                            Enter this code on the verification page to complete your registration.
+                        </p>
+                    </div>
+                    
+                    <div style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                        <p style="color: #92400e; margin: 0; font-size: 14px;">
+                            <strong>⏰ Important:</strong> This code will expire in 10 minutes for security reasons.
+                        </p>
+                    </div>
+                    
+                    <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
+                        <p style="color: #9ca3af; font-size: 14px; margin: 0;">
+                            If you didn't create this account, please ignore this email.
+                        </p>
+                        <p style="color: #9ca3af; font-size: 14px; margin: 8px 0 0 0;">
+                            This is an automated message, please do not reply.
+                        </p>
+                    </div>
+                </body>
+            </html>
+            """,
+            subtype="html"
+        )
+        
+        fm = FastMail(conf)
+        try:
+            await fm.send_message(message)
+            print(f"Verification email sent to {user.email}: {verification_code}")
+        except Exception as e:
+            print(f"Failed to send verification email to {user.email}: {str(e)}")
     
     async def create(self, user_create, safe: bool = False, request: Optional[Request] = None):
         """Override create method to provide better error messages"""

@@ -1,0 +1,167 @@
+<!-- Modal error display for authentication and critical errors -->
+<div class="error-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+     data-error-id="{{ error.error_id }}"
+     data-error-code="{{ error.code }}"
+     data-error-severity="{{ error.severity }}"
+     data-error-context="{{ error.context }}"
+     id="error-modal-{{ error.error_id }}"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="modal-title-{{ error.error_id }}"
+     aria-describedby="modal-description-{{ error.error_id }}">
+  
+  <div class="bg-white rounded-lg max-w-md w-full mx-4 max-h-96 overflow-y-auto shadow-xl transform transition-all">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between p-6 border-b border-gray-200">
+      <div class="flex items-center gap-3">
+        <!-- Modal Icon -->
+        <div class="flex-shrink-0 text-2xl">
+          {% if error.severity == "error" %}
+            <span class="text-red-600" aria-hidden="true">⚠️</span>
+          {% elif error.severity == "warning" %}
+            <span class="text-yellow-600" aria-hidden="true">⚠️</span>
+          {% else %}
+            <span class="text-blue-600" aria-hidden="true">ℹ️</span>
+          {% endif %}
+        </div>
+        
+        <h3 id="modal-title-{{ error.error_id }}" class="text-lg font-semibold text-gray-900">
+          {% if error.context == "auth" %}
+            Authentication Required
+          {% elif error.context == "network" %}
+            Connection Problem
+          {% elif error.context == "server" %}
+            Service Unavailable
+          {% else %}
+            Action Required
+          {% endif %}
+        </h3>
+      </div>
+      
+      <button type="button" 
+              onclick="closeErrorModal('{{ error.error_id }}')" 
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close dialog">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Modal Content -->
+    <div class="p-6">
+      <p id="modal-description-{{ error.error_id }}" class="text-gray-700 mb-6">
+        {{ error.message }}
+      </p>
+      
+      {% if error.context == "auth" %}
+        <p class="text-sm text-gray-600 mb-6">
+          Your session has expired or you need to sign in to access this feature. Please sign in to continue.
+        </p>
+      {% elif error.context == "network" %}
+        <p class="text-sm text-gray-600 mb-6">
+          We're having trouble connecting to our servers. Please check your internet connection and try again.
+        </p>
+      {% elif error.context == "server" %}
+        <p class="text-sm text-gray-600 mb-6">
+          Our service is temporarily unavailable. We're working to resolve this issue. Please try again in a few minutes.
+        </p>
+      {% endif %}
+      
+      <!-- Modal Actions -->
+      {% if error.recoverable %}
+        <div class="flex gap-3 justify-end">
+          {% if error.context == "auth" %}
+            <button type="button" 
+                    onclick="closeErrorModal('{{ error.error_id }}')" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+            <button type="button" 
+                    onclick="redirectToLogin()" 
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors">
+              Sign In
+            </button>
+          {% elif error.context == "network" %}
+            <button type="button" 
+                    onclick="closeErrorModal('{{ error.error_id }}')" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+              Cancel
+            </button>
+            <button type="button" 
+                    onclick="retryLastRequest(); closeErrorModal('{{ error.error_id }}')" 
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors">
+              Try Again
+            </button>
+          {% else %}
+            <button type="button" 
+                    onclick="closeErrorModal('{{ error.error_id }}')" 
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors">
+              OK
+            </button>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="flex justify-end">
+          <button type="button" 
+                  onclick="closeErrorModal('{{ error.error_id }}')" 
+                  class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors">
+            OK
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+// Modal specific JavaScript
+function closeErrorModal(errorId) {
+  const modal = document.getElementById(`error-modal-${errorId}`);
+  if (modal) {
+    // Add fade out animation
+    modal.style.opacity = '0';
+    
+    setTimeout(() => {
+      modal.remove();
+    }, 200);
+  }
+}
+
+// Handle initial animation and focus management
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('error-modal-{{ error.error_id }}');
+  if (modal) {
+    // Start with opacity 0 for fade-in effect
+    modal.style.opacity = '0';
+    
+    // Animate in
+    setTimeout(() => {
+      modal.style.opacity = '1';
+    }, 100);
+    
+    // Focus management for accessibility
+    const primaryButton = modal.querySelector('button[onclick*="redirectToLogin"], button[onclick*="retryLastRequest"]');
+    if (primaryButton) {
+      primaryButton.focus();
+    }
+    
+    // Handle Escape key
+    function handleEscape(event) {
+      if (event.key === 'Escape') {
+        closeErrorModal('{{ error.error_id }}');
+        document.removeEventListener('keydown', handleEscape);
+      }
+    }
+    document.addEventListener('keydown', handleEscape);
+    
+    // Handle click outside modal
+    modal.addEventListener('click', function(event) {
+      if (event.target === modal) {
+        closeErrorModal('{{ error.error_id }}');
+      }
+    });
+  }
+});
+</script>

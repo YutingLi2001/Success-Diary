@@ -10,3 +10,4 @@ python-dotenv==1.0.0
 passlib[bcrypt]==1.7.4
 aiosqlite==0.20.0
 httpx-oauth==0.14.0
+pytz==2023.3

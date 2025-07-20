@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Handling Test - Success Diary</title>
+    <link href="/static/css/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">Error Handling Test Page</h1>
+        <p class="text-gray-600 mb-8">Test different error types and their display methods. This page demonstrates the unified error handling system.</p>
+        
+        <!-- Error Display Area -->
+        <div id="error-display" class="mb-8"></div>
+        
+        <!-- Test Buttons Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Validation Error Test -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Validation Error (Inline)</h3>
+                <p class="text-sm text-gray-600 mb-4">Tests field validation with inline error display</p>
+                <button 
+                    hx-post="/test/validation-error"
+                    hx-target="#error-display"
+                    class="w-full bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors">
+                    Test Validation Error
+                </button>
+            </div>
+            
+            <!-- Authentication Error Test -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Authentication Error (Modal)</h3>
+                <p class="text-sm text-gray-600 mb-4">Tests session expiration with modal display</p>
+                <button 
+                    hx-post="/test/auth-error"
+                    hx-target="#error-display"
+                    class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+                    Test Auth Error
+                </button>
+            </div>
+            
+            <!-- Network Error Test -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Network Error (Toast)</h3>
+                <p class="text-sm text-gray-600 mb-4">Tests connection issues with toast notification</p>
+                <button 
+                    hx-post="/test/network-error"
+                    hx-target="#error-display"
+                    class="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 transition-colors">
+                    Test Network Error
+                </button>
+            </div>
+            
+            <!-- Server Error Test -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Server Error (Toast)</h3>
+                <p class="text-sm text-gray-600 mb-4">Tests unexpected server errors with graceful fallback</p>
+                <button 
+                    hx-post="/test/server-error"
+                    hx-target="#error-display"
+                    class="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors">
+                    Test Server Error
+                </button>
+            </div>
+            
+            <!-- HTTP Error Test -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">HTTP Error (Inline)</h3>
+                <p class="text-sm text-gray-600 mb-4">Tests standard HTTP errors (404, 500, etc.)</p>
+                <button 
+                    hx-post="/test/http-error"
+                    hx-target="#error-display"
+                    class="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">
+                    Test HTTP Error
+                </button>
+            </div>
+            
+            <!-- Success Message Test -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Success Message</h3>
+                <p class="text-sm text-gray-600 mb-4">Tests positive feedback with success toast</p>
+                <button 
+                    onclick="showSuccessMessage('This is a test success message!')"
+                    class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
+                    Test Success Message
+                </button>
+            </div>
+        </div>
+        
+        <!-- Form Validation Test -->
+        <div class="mt-12 bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-semibold mb-4">Form Validation Test</h3>
+            <p class="text-sm text-gray-600 mb-6">Test individual field validation with inline error display</p>
+            
+            <form class="space-y-4">
+                <div>
+                    <label for="test-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input 
+                        type="email" 
+                        id="test-email" 
+                        name="email" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter an invalid email to test validation">
+                </div>
+                
+                <div>
+                    <label for="test-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input 
+                        type="password" 
+                        id="test-password" 
+                        name="password" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter a short password to test validation">
+                </div>
+                
+                <div class="flex gap-4">
+                    <button 
+                        type="button"
+                        onclick="testFieldValidation()"
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+                        Test Field Validation
+                    </button>
+                    
+                    <button 
+                        type="button"
+                        onclick="clearValidationErrors()"
+                        class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">
+                        Clear Errors
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="mt-8 text-center">
+            <a href="/" class="text-blue-600 hover:text-blue-800 underline">← Back to Dashboard</a>
+        </div>
+    </div>
+    
+    <!-- Error Handling JavaScript -->
+    <script src="/static/js/error-handlers.js"></script>
+    
+    <script>
+        // Test field validation
+        function testFieldValidation() {
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            
+            // Clear existing errors
+            clearValidationErrors();
+            
+            // Test email validation
+            if (!email) {
+                displayValidationError('email', 'Email is required');
+            } else if (!email.includes('@')) {
+                displayValidationError('email', 'Please enter a valid email address');
+            }
+            
+            // Test password validation
+            if (!password) {
+                displayValidationError('password', 'Password is required');
+            } else if (password.length < 8) {
+                displayValidationError('password', 'Password must be at least 8 characters long');
+            }
+            
+            // Focus first invalid field if any errors
+            setTimeout(() => {
+                focusInvalidField();
+            }, 100);
+        }
+        
+        // HTMX event listeners for better UX
+        document.addEventListener('htmx:beforeRequest', function(event) {
+            const button = event.detail.elt;
+            button.disabled = true;
+            button.textContent = 'Loading...';
+        });
+        
+        document.addEventListener('htmx:afterRequest', function(event) {
+            const button = event.detail.elt;
+            button.disabled = false;
+            // Restore original text based on button content
+            if (button.textContent === 'Loading...') {
+                if (button.getAttribute('hx-post').includes('validation-error')) {
+                    button.textContent = 'Test Validation Error';
+                } else if (button.getAttribute('hx-post').includes('auth-error')) {
+                    button.textContent = 'Test Auth Error';
+                } else if (button.getAttribute('hx-post').includes('network-error')) {
+                    button.textContent = 'Test Network Error';
+                } else if (button.getAttribute('hx-post').includes('server-error')) {
+                    button.textContent = 'Test Server Error';
+                } else if (button.getAttribute('hx-post').includes('http-error')) {
+                    button.textContent = 'Test HTTP Error';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

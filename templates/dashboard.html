@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <title>Dashboard - Success Diary</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="/static/css/output.css" rel="stylesheet">
   <script src="https://unpkg.com/htmx.org@1.9.9"></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
+
   <!-- Navigation Header -->
   <nav class="bg-white shadow-sm border-b">
-    <div class="max-w-4xl mx-auto px-6 py-4">
+    <div class="max-w-4xl mx-auto px-4 md:px-6 py-4">
       <div class="flex justify-between items-center">
         <div class="flex items-center space-x-6">
-          <h1 class="text-xl font-bold text-gray-800">Success Diary</h1>
+          <a href="/" class="text-lg md:text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors duration-200">Success Diary</a>
+          <!-- Desktop Navigation -->
           <div class="hidden md:flex space-x-4">
             <a href="/" class="text-blue-600 font-medium border-b-2 border-blue-600 pb-1">Dashboard</a>
             <a href="/entries" class="text-gray-600 hover:text-gray-800">All Entries</a>
@@ -20,98 +22,210 @@
             <a href="/settings" class="text-gray-600 hover:text-gray-800">Settings</a>
           </div>
         </div>
-        <div class="flex items-center space-x-4">
+        
+        <!-- Desktop User Info -->
+        <div class="hidden md:flex items-center space-x-4">
           <span class="text-sm text-gray-600">Welcome, {{ user.display_name or user.email }}</span>
-          <button onclick="logout()" class="text-red-600 hover:text-red-800 text-sm font-medium">Logout</button>
+          <button onclick="logout()" class="text-red-600 hover:text-red-800 text-sm font-medium min-h-[44px] px-3 py-2">Logout</button>
+        </div>
+        
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-button" class="md:hidden inline-flex items-center justify-center p-2 min-h-[44px] min-w-[44px] rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Mobile Navigation Menu -->
+      <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
+        <div class="space-y-3">
+          <a href="/" class="block text-blue-600 font-medium px-3 py-3 min-h-[44px] rounded-md bg-blue-50">Dashboard</a>
+          <a href="/entries" class="block text-gray-600 hover:text-gray-800 hover:bg-gray-50 px-3 py-3 min-h-[44px] rounded-md">All Entries</a>
+          <a href="/analytics" class="block text-gray-600 hover:text-gray-800 hover:bg-gray-50 px-3 py-3 min-h-[44px] rounded-md">Analytics</a>
+          <a href="/settings" class="block text-gray-600 hover:text-gray-800 hover:bg-gray-50 px-3 py-3 min-h-[44px] rounded-md">Settings</a>
+          <div class="border-t border-gray-200 pt-3 mt-3">
+            <div class="px-3 py-2 text-sm text-gray-600">{{ user.display_name or user.email }}</div>
+            <button onclick="logout()" class="block w-full text-left text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-3 min-h-[44px] rounded-md font-medium">Logout</button>
+          </div>
         </div>
       </div>
     </div>
   </nav>
 
   <!-- Main Content -->
-  <div class="max-w-4xl mx-auto p-6">
-    <!-- Today's Entry Form -->
-    <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
-      <h2 class="text-xl font-semibold mb-4 text-gray-800">Today's Entry</h2>
-      
-      <form method="post" action="/add" class="grid gap-4">
-        <!-- Success Section -->
-        <div class="space-y-2">
-          <h3 class="font-semibold text-green-700">Today's Successes <span class="text-sm font-normal text-green-600">(at least one)</span></h3>
-          <input name="success_1" placeholder="✨ What went well today? (required)" class="border-2 border-green-300 p-3 w-full rounded-lg focus:border-green-500 focus:outline-none" required />
-          <input name="success_2" placeholder="Any other wins or progress? (optional)" class="border border-green-200 p-3 w-full rounded-lg text-gray-600 focus:border-green-400 focus:outline-none" />
-          <input name="success_3" placeholder="One more success to celebrate? (optional)" class="border border-green-200 p-3 w-full rounded-lg text-gray-600 focus:border-green-400 focus:outline-none" />
-        </div>
+  <div class="max-w-4xl mx-auto p-4 md:p-6">
+    <!-- Today's Entry Section -->
+    <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6 mb-6 md:mb-8">
+      {% if can_create_today %}
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">Today's Entry</h2>
+        
+        <form id="daily-entry-form" method="post" action="/add" class="grid gap-4">
+          
+          <!-- Title Section -->
+          <div class="space-y-2">
+            <h3 class="font-semibold text-gray-700">Entry Title <span class="text-sm font-normal text-gray-600">(optional)</span></h3>
+            <div class="form-field">
+              <input id="title" name="title" placeholder="Custom title or keep auto-generated" class="border border-gray-300 p-3 w-full rounded-lg focus:border-blue-500 focus:outline-none min-h-[44px]" />
+            </div>
+          </div>
 
-        <!-- Gratitude Section -->
-        <div class="space-y-2">
-          <h3 class="font-semibold text-blue-700">Today's Gratitude <span class="text-sm font-normal text-blue-600">(at least one)</span></h3>
-          <input name="gratitude_1" placeholder="🙏 What are you grateful for today? (required)" class="border-2 border-blue-300 p-3 w-full rounded-lg focus:border-blue-500 focus:outline-none" required />
-          <input name="gratitude_2" placeholder="Something else that brought you joy? (optional)" class="border border-blue-200 p-3 w-full rounded-lg text-gray-600 focus:border-blue-400 focus:outline-none" />
-          <input name="gratitude_3" placeholder="One more thing to appreciate? (optional)" class="border border-blue-200 p-3 w-full rounded-lg text-gray-600 focus:border-blue-400 focus:outline-none" />
-        </div>
+          <!-- Success Section -->
+          <div class="space-y-2">
+            <h3 class="font-semibold text-green-700">Today's Successes <span class="text-sm font-normal text-green-600">(at least one)</span></h3>
+            <div class="form-field">
+              <input name="success_1" placeholder="✨ What went well today? (required)" class="border-2 border-green-300 p-3 w-full rounded-lg focus:border-green-500 focus:outline-none min-h-[44px]" required />
+            </div>
+            <div class="form-field">
+              <input name="success_2" placeholder="Any other wins or progress? (optional)" class="border border-green-200 p-3 w-full rounded-lg text-gray-600 focus:border-green-400 focus:outline-none min-h-[44px]" />
+            </div>
+            <div class="form-field">
+              <input name="success_3" placeholder="One more success to celebrate? (optional)" class="border border-green-200 p-3 w-full rounded-lg text-gray-600 focus:border-green-400 focus:outline-none min-h-[44px]" />
+            </div>
+          </div>
 
-        <!-- Anxiety Section -->
-        <div class="space-y-2">
-          <h3 class="font-semibold text-red-700">Today's Worries <span class="text-sm font-normal text-red-600">(at least one)</span></h3>
-          <input name="anxiety_1" placeholder="💭 What's on your mind? Any concerns? (required)" class="border-2 border-red-300 p-3 w-full rounded-lg focus:border-red-500 focus:outline-none" required />
-          <input name="anxiety_2" placeholder="Any other stress or challenges? (optional)" class="border border-red-200 p-3 w-full rounded-lg text-gray-600 focus:border-red-400 focus:outline-none" />
-          <input name="anxiety_3" placeholder="Anything else worth noting? (optional)" class="border border-red-200 p-3 w-full rounded-lg text-gray-600 focus:border-red-400 focus:outline-none" />
-        </div>
+          <!-- Gratitude Section -->
+          <div class="space-y-2">
+            <h3 class="font-semibold text-blue-700">Today's Gratitude <span class="text-sm font-normal text-blue-600">(at least one)</span></h3>
+            <div class="form-field">
+              <input name="gratitude_1" placeholder="🙏 What are you grateful for today? (required)" class="border-2 border-blue-300 p-3 w-full rounded-lg focus:border-blue-500 focus:outline-none min-h-[44px]" required />
+            </div>
+            <div class="form-field">
+              <input name="gratitude_2" placeholder="Something else that brought you joy? (optional)" class="border border-blue-200 p-3 w-full rounded-lg text-gray-600 focus:border-blue-400 focus:outline-none min-h-[44px]" />
+            </div>
+            <div class="form-field">
+              <input name="gratitude_3" placeholder="One more thing to appreciate? (optional)" class="border border-blue-200 p-3 w-full rounded-lg text-gray-600 focus:border-blue-400 focus:outline-none min-h-[44px]" />
+            </div>
+          </div>
 
-        <!-- Self Rating -->
-        <div class="space-y-2">
-          <label for="score" class="font-semibold text-purple-700">Overall Day Rating (1-5)</label>
-          <select name="score" class="border p-3 w-full rounded-lg focus:outline-none focus:border-purple-500" required>
-            <option value="1">1 - Challenging day</option>
-            <option value="2">2 - Difficult day</option>
-            <option value="3" selected>3 - Average day</option>
-            <option value="4">4 - Good day</option>
-            <option value="5">5 - Great day</option>
-          </select>
-        </div>
+          <!-- Anxiety Section -->
+          <div class="space-y-2">
+            <h3 class="font-semibold text-red-700">Today's Worries <span class="text-sm font-normal text-red-600">(at least one)</span></h3>
+            <div class="form-field">
+              <input name="anxiety_1" placeholder="💭 What's on your mind? Any concerns? (required)" class="border-2 border-red-300 p-3 w-full rounded-lg focus:border-red-500 focus:outline-none min-h-[44px]" required />
+            </div>
+            <div class="form-field">
+              <input name="anxiety_2" placeholder="Any other stress or challenges? (optional)" class="border border-red-200 p-3 w-full rounded-lg text-gray-600 focus:border-red-400 focus:outline-none min-h-[44px]" />
+            </div>
+            <div class="form-field">
+              <input name="anxiety_3" placeholder="Anything else worth noting? (optional)" class="border border-red-200 p-3 w-full rounded-lg text-gray-600 focus:border-red-400 focus:outline-none min-h-[44px]" />
+            </div>
+          </div>
 
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200">Save Today's Entry</button>
-      </form>
+          <!-- Self Rating -->
+          <div class="space-y-2">
+            <label for="score" class="font-semibold text-purple-700">Overall Day Rating (1-5)</label>
+            <select name="score" class="border p-3 w-full rounded-lg focus:outline-none focus:border-purple-500 min-h-[44px]" required>
+              <option value="1">1 - Challenging day</option>
+              <option value="2">2 - Difficult day</option>
+              <option value="3" selected>3 - Average day</option>
+              <option value="4">4 - Good day</option>
+              <option value="5">5 - Great day</option>
+            </select>
+          </div>
+
+          <!-- Journal Section -->
+          <div class="space-y-2">
+            <h3 class="font-semibold text-gray-700">Daily Journal <span class="text-sm font-normal text-gray-600">(optional)</span></h3>
+            <div class="form-field">
+              <textarea name="journal" placeholder="Any additional thoughts, reflections, or details about your day..." class="border border-gray-300 p-3 w-full rounded-lg focus:border-blue-500 focus:outline-none min-h-[100px] resize-y"></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg font-semibold transition duration-200 w-full md:w-auto min-h-[44px]">Save Today's Entry</button>
+        </form>
+      {% else %}
+        <!-- Entry Complete Success Card -->
+        <div class="text-center py-8">
+          <!-- Success Icon -->
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          
+          <!-- Heading -->
+          <h2 class="text-2xl font-bold text-green-800 mb-2">Entry Complete for Today!</h2>
+          
+          <!-- Encouraging Message -->
+          <p class="text-green-700 mb-6 max-w-md mx-auto">
+            You've already journaled today. Great job maintaining your daily reflection habit! 🎉
+          </p>
+          
+          <!-- Primary Action Button -->
+          {% if existing_entry_today %}
+            <a href="/entries/{{ existing_entry_today.id }}" 
+               class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition duration-200 shadow-sm hover:shadow-md min-h-[44px] w-full xs:w-auto">
+              <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              View & Edit Today's Entry
+            </a>
+          {% endif %}
+          
+          <!-- Secondary Action -->
+          <div class="mt-4">
+            <a href="/entries" class="text-blue-600 hover:text-blue-800 font-medium">
+              View all entries →
+            </a>
+          </div>
+        </div>
+      {% endif %}
     </div>
 
     <!-- Recent Entries -->
-    <div class="bg-white rounded-lg shadow-sm border p-6">
-      <h2 class="text-xl font-semibold mb-4 text-gray-800">Recent Entries</h2>
-      <div class="space-y-4">
+    <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg md:text-xl font-semibold text-gray-800">Recent Entries</h2>
+        <a href="/entries" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View all →</a>
+      </div>
+      <div class="space-y-3">
         {% for e in entries %}
-          <div class="border border-gray-200 p-4 rounded-lg bg-gray-50">
-            <div class="flex justify-between items-center mb-3">
-              <span class="font-semibold text-gray-800">{{ e.entry_date }}</span>
-              <span class="text-sm bg-purple-100 text-purple-800 px-3 py-1 rounded-full">{{ e.score }}/5</span>
+          <a href="/entries/{{ e.id }}/view" class="block bg-white border border-gray-200 rounded-lg hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-4 rounded-t-lg">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <div class="flex flex-col">
+                  <div class="font-semibold text-gray-800 text-base md:text-lg">
+                    {% if e.title %}
+                      {{ e.title }}
+                    {% else %}
+                      <script>
+                        document.write(window.EntryTitles ? window.EntryTitles.generateAutoTitle('{{ e.entry_date }}') : '{{ e.entry_date.strftime('%B %d, %Y') }}');
+                      </script>
+                    {% endif %}
+                  </div>
+                  <div class="text-sm text-gray-600">{{ e.entry_date.strftime('%A, %B %d, %Y') }}</div>
+                  {% if e.was_edited %}
+                    <div class="text-xs text-gray-500 mt-1">
+                      Created: {{ format_user_timestamp(user, e.created_at, 'short') }} • 
+                      Edited: {{ format_user_timestamp(user, e.updated_at, 'short') }}
+                    </div>
+                  {% else %}
+                    <div class="text-xs text-gray-500 mt-1">
+                      Created: {{ format_user_timestamp(user, e.created_at, 'short') }}
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full text-sm font-medium">{{ e.score }}/5</span>
+                  {% if e.score >= 4 %}
+                    <span class="text-lg">😊</span>
+                  {% elif e.score >= 3 %}
+                    <span class="text-lg">😐</span>
+                  {% else %}
+                    <span class="text-lg">😔</span>
+                  {% endif %}
+                </div>
+              </div>
             </div>
-            <div class="grid gap-3 text-sm">
-              <div>
-                <div class="font-medium text-green-700 mb-1">Successes:</div>
-                <div class="ml-2 space-y-1">
-                  <div>✨ {{ e.success_1 }}</div>
-                  {% if e.success_2 %}<div>✨ {{ e.success_2 }}</div>{% endif %}
-                  {% if e.success_3 %}<div>✨ {{ e.success_3 }}</div>{% endif %}
-                </div>
-              </div>
-              <div>
-                <div class="font-medium text-blue-700 mb-1">Gratitude:</div>
-                <div class="ml-2 space-y-1">
-                  <div>🙏 {{ e.gratitude_1 }}</div>
-                  {% if e.gratitude_2 %}<div>🙏 {{ e.gratitude_2 }}</div>{% endif %}
-                  {% if e.gratitude_3 %}<div>🙏 {{ e.gratitude_3 }}</div>{% endif %}
-                </div>
-              </div>
-              <div>
-                <div class="font-medium text-red-700 mb-1">Worries:</div>
-                <div class="ml-2 space-y-1">
-                  <div>💭 {{ e.anxiety_1 }}</div>
-                  {% if e.anxiety_2 %}<div>💭 {{ e.anxiety_2 }}</div>{% endif %}
-                  {% if e.anxiety_3 %}<div>💭 {{ e.anxiety_3 }}</div>{% endif %}
-                </div>
+            <!-- Preview Content -->
+            <div class="p-4">
+              <div class="text-gray-700 text-sm">
+                ✨ {{ e.success_1[:60] }}{% if e.success_1|length > 60 %}...{% endif %}
               </div>
             </div>
-          </div>
+          </a>
         {% else %}
           <div class="text-gray-500 text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
             <div class="text-4xl mb-4">📝</div>
@@ -140,6 +254,63 @@
         window.location.href = '/login';
       }
     }
+    
+    // Mobile menu toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuButton = document.getElementById('mobile-menu-button');
+      const mobileMenu = document.getElementById('mobile-menu');
+      
+      if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', function() {
+          mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+          if (!mobileMenuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
+            mobileMenu.classList.add('hidden');
+          }
+        });
+      }
+    });
+  </script>
+  
+  <!-- Error Handling JavaScript -->
+  <script src="/static/js/error-handlers.js"></script>
+  
+  <!-- Entry Titles JavaScript -->
+  <script src="/static/js/entry-titles.js"></script>
+  
+  <!-- Validation Engine -->
+  <script src="/static/js/validation-engine.js"></script>
+  
+  <!-- Initialize Systems -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Simple timezone detection and update
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      fetch('/api/user/update-detected-timezone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ detected_timezone: detectedTimezone })
+      }).catch(error => console.warn('Failed to update timezone:', error));
+
+      try {
+        // Fetch validation configuration
+        const response = await fetch('/api/validation-config/daily_entry');
+        const data = await response.json();
+        
+        // Initialize validation for the daily entry form
+        const validationEngine = initializeValidation('#daily-entry-form', data.config);
+        
+        if (validationEngine) {
+          console.log('Progressive validation initialized for daily entry form');
+        }
+      } catch (error) {
+        console.warn('Failed to initialize progressive validation:', error);
+        // Graceful degradation - form still works without validation
+      }
+    });
   </script>
 </body>
 </html>

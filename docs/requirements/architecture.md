@@ -13,7 +13,7 @@ The following stack is designed to support rapid development, clean UX, and scal
 | **Styling** | Tailwind CSS | v3.4 | Utility-first CSS framework; no custom CSS required |
 | **Authentication** | FastAPI Users | 14.0.1 | Provides modular user management (JWT, registration, reset, OAuth-ready), native to FastAPI |
 | **Database & ORM** | SQLModel | 0.0.24 | Type-safe ORM from the FastAPI author; SQLite (dev) → PostgreSQL (prod) with Alembic support |
-| **Charting** | Chart.js (CDN) | Latest | Lightweight visualizations using RESTful JSON fetches; avoids heavy frontend libraries |
+| **Charting** | Chart.js (CDN) | Latest | Hybrid aggregated API + client rendering - FastAPI endpoints return pre-aggregated analytics data, Chart.js handles rendering with smooth animations, Redis/memory cache for aggregated data (5-minute TTL) |
 | **Async Server** | Uvicorn | 0.34.3 | ASGI server for running FastAPI with high concurrency support |
 
 ## Development Environment Architecture
@@ -38,16 +38,43 @@ The following stack is designed to support rapid development, clean UX, and scal
 - **File**: `db.sqlite3` (auto-created on first run)
 - **Models**: 
   - `User` (SQLAlchemy + FastAPI-Users base class)
+    - `entry_sort_preference VARCHAR(20) DEFAULT 'newest_first'` - User's preferred entry sorting
+    - `user_timezone VARCHAR(50) NULL` - Manual timezone preference
+    - `timezone_auto_detect BOOLEAN DEFAULT TRUE` - Auto-detection permission
+    - `last_detected_timezone VARCHAR(50) NULL` - Cache of last detected timezone
   - `Entry` (SQLModel for familiar syntax)
-- **Session Management**: Mixed async/sync approach
-  - Async sessions for FastAPI-Users authentication
-  - Sync sessions for business logic (Entry operations)
+    - `is_draft BOOLEAN DEFAULT TRUE` - Draft status for auto-save functionality
+    - `last_auto_saved TIMESTAMP NULL` - Last auto-save timestamp
+    - `previous_content TEXT NULL` - One-level undo capability
+    - `edit_count INTEGER DEFAULT 0` - Track number of edits
+    - `is_archived BOOLEAN DEFAULT FALSE` - Archive status
+    - `archived_at TIMESTAMP NULL` - Archive timestamp
+    - `archived_reason VARCHAR(100) NULL` - Optional archive reason
+    - `overall_rating INTEGER NULL` - 1-5 rating or NULL for no rating
+    - `victory_point VARCHAR(255)` - Victory reflection (255 char limit)
+    - `gratitude_point VARCHAR(255)` - Gratitude reflection (255 char limit)
+    - `anxiety_point VARCHAR(255)` - Anxiety reflection (255 char limit)
+    - `journal_content VARCHAR(8000)` - Main journal content (8,000 char limit)
+  - `UserFeedback` (SQLModel for in-app feedback)
+    - `user_id INTEGER` - Foreign key to User
+    - `working_well VARCHAR(500)` - What's working feedback
+    - `needs_improvement VARCHAR(500)` - Improvement suggestions
+    - `feature_request VARCHAR(300)` - Optional feature requests
+    - `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
 
 ### Production Database (PostgreSQL)
 - **Platform**: AWS RDS PostgreSQL
-- **Migration Strategy**: SQLite to PostgreSQL migration scripts
+- **Migration Strategy**: Direct PostgreSQL Deployment (No Migration) - SQLite for development, PostgreSQL from day one production
+- **Environment Strategy**: Single codebase supports both environments with DATABASE_URL configuration
 - **Data Integrity**: Comprehensive testing of production data flows
 - **Backup**: Automated database backups and disaster recovery procedures
+
+### Session Management
+- **Strategy**: Full Async Strategy - 100% async sessions using FastAPI + SQLModel + asyncpg + SQLAlchemy 2.0
+- **Implementation**: AsyncSessionLocal factory with dependency injection (`get_db()` FastAPI dependency)
+- **Connection Pooling**: pool_size=20 for production scalability
+- **Background Tasks**: Standalone AsyncSessionLocal() contexts for background operations
+- **Repository Pattern**: For complex queries and data operations
 
 ### Schema Management
 - **Development**: Delete `db.sqlite3` and restart for schema changes
@@ -130,15 +157,37 @@ The following stack is designed to support rapid development, clean UX, and scal
 ## Quality Requirements
 
 ### Browser Compatibility
-- **Primary**: Modern browsers supporting ES6+ and CSS Grid
-- **Responsive**: Mobile-first design with Tailwind CSS
+- **Supported Versions**: Last 2 Major Versions approach (as of 2025)
+  - Chrome 120+ (last 2 major versions)
+  - Firefox 115+ (last 2 major versions)
+  - Safari 16+ (last 2 major versions)
+  - Edge 120+ (last 2 major versions)
+- **Required Features**: CSS Grid (complete responsive layout), ES6+ JavaScript (modern syntax, async/await, modules), Fetch API (AJAX without polyfills), Local Storage (draft persistence), CSS Custom Properties (dynamic theming)
+- **Responsive Design**: Modern device-focused breakpoints - 375px (Mobile), 768px (Tablet), 1024px (Desktop), 1440px (Large desktop)
+- **Tailwind CSS Configuration**: 'sm': '375px', 'md': '768px', 'lg': '1024px', 'xl': '1440px'
 - **Progressive Enhancement**: Core functionality works without JavaScript
 
 ### Performance Standards
-- **Page Load**: < 3 seconds on standard connections
-- **Error Rate**: < 1% production error rate (uncaught exceptions per 1,000 requests)
+- **MVP Approach**: Reliability Over Performance Optimization
+- **Primary Goal**: Website loads and functions correctly with no specific load time targets during MVP phase
+- **Focus**: Core functionality, data integrity, and user workflow completion
+- **Future Optimization**: Performance optimization addressed post-MVP once core features are stable
+- **Baseline**: Basic FastAPI + PostgreSQL setup provides adequate performance for initial user base
+- **Success Metrics**: Feature completeness and user adoption, not milliseconds
 - **Uptime**: 99.9% availability target for production deployment
 - **Mobile Performance**: Optimized for mobile networks and devices
+
+### Error Handling Architecture
+- **Strategy**: HTMX-Native Error Handling with Progressive Enhancement
+- **Response Format**: Return HTML fragments for HTMX requests with JSON fallback for API calls
+- **Unified Handler**: Single `handle_error()` function prevents dual JSON/HTML maintenance
+- **Error Categories**:
+  - **Validation**: Field-level inline errors with retry functionality
+  - **Authentication**: Session expired with login redirect
+  - **Network**: Connection issues with retry buttons
+  - **Server**: Generic server errors with graceful fallback
+- **Error Structure**: Include `severity`, `ui_hint`, `context` for future UI enhancements
+- **API Endpoints**: `/analytics/mood-trends`, `/entries/draft`, `/entries/finalize`, `/entries/today/draft`, `/entries/{id}/archive`, `/entries/{id}/unarchive`
 
 ### Code Quality
 - **Type Safety**: Full Python type annotation with SQLModel

@@ -55,6 +55,13 @@ Success-Diary/
 │   │   ├── core-functionality-overview.md
 │   │   ├── development-requirements.md
 │   │   └── project-scope.md
+│   ├── 📁 adr/                      # Architecture Decision Records
+│   │   ├── 📁 decisions/            # Core architectural decisions
+│   │   ├── 📁 specifications/       # Technical implementation details
+│   │   ├── 📁 business-decisions/   # Product/business strategy
+│   │   ├── 📁 analysis/             # Research and analysis
+│   │   ├── README.md                # ADR index and guidelines
+│   │   └── template.md              # ADR template
 │   ├── 📁 operations/               # Operational guides
 │   │   └── developer-manual.md
 │   ├── 📁 logs/                     # Development logs
