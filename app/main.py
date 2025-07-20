@@ -505,6 +505,7 @@ def can_create_entry_today(user: User, db: Session) -> bool:
 @app.post("/add")
 async def add_entry(
     request: Request,
+    title: str = Form(""),
     success_1: str = Form(...),
     success_2: str = Form(""),
     success_3: str = Form(""),
@@ -515,6 +516,7 @@ async def add_entry(
     anxiety_2: str = Form(""),
     anxiety_3: str = Form(""),
     score: int = Form(...),
+    journal: str = Form(""),
     db: Session = Depends(get_session),
 ):
     # Get the current user using our safe method
@@ -554,6 +556,7 @@ async def add_entry(
     entry = Entry(
         user_id=str(user.id),
         entry_date=get_user_local_date(db_user),  # Use refreshed user object
+        title=title if title.strip() else None,
         success_1=success_1,
         success_2=success_2 if success_2.strip() else None,
         success_3=success_3 if success_3.strip() else None,
@@ -563,7 +566,8 @@ async def add_entry(
         anxiety_1=anxiety_1,
         anxiety_2=anxiety_2 if anxiety_2.strip() else None,
         anxiety_3=anxiety_3 if anxiety_3.strip() else None,
-        score=score
+        score=score,
+        journal=journal if journal.strip() else None
     )
     db.add(entry)
     db.commit()
@@ -578,6 +582,7 @@ async def add_entry(
 async def update_entry(
     entry_id: int,
     request: Request,
+    title: str = Form(None),
     success_1: str = Form(None),
     success_2: str = Form(None),
     success_3: str = Form(None),
@@ -607,6 +612,8 @@ async def update_entry(
     
     # Update only provided fields
     update_data = {}
+    if title is not None:
+        update_data["title"] = title if title.strip() else None
     if success_1 is not None:
         update_data["success_1"] = success_1
     if success_2 is not None:

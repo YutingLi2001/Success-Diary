@@ -43,6 +43,7 @@ class Entry(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     user_id: str
     entry_date: date
+    title: str | None = Field(default=None)  # Auto-generated or custom title
     created_at: datetime = Field(default_factory=datetime.utcnow)  # Exact timestamp when entry was created
     updated_at: datetime = Field(default_factory=datetime.utcnow)  # Exact timestamp when entry was last modified
     success_1: str
@@ -65,6 +66,7 @@ def receive_before_update(mapper, connection, target):
 
 class EntryUpdate(SQLModel):
     """Model for updating existing entries"""
+    title: str | None = None
     success_1: str | None = None
     success_2: str | None = None
     success_3: str | None = None
@@ -88,6 +90,7 @@ class EntryRead(SQLModel):
     id: int
     user_id: str
     entry_date: date
+    title: str | None
     created_at: datetime
     updated_at: datetime
     success_1: str

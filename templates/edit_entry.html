@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Edit Entry - Success Diary</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="/static/css/output.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50 min-h-screen">
   <!-- Navigation Header -->
@@ -11,7 +11,7 @@
     <div class="max-w-4xl mx-auto px-6 py-4">
       <div class="flex justify-between items-center">
         <div class="flex items-center space-x-6">
-          <h1 class="text-xl font-bold text-gray-800">Success Diary</h1>
+          <a href="/" class="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors duration-200">Success Diary</a>
           <div class="hidden md:flex space-x-4">
             <a href="/" class="text-gray-600 hover:text-gray-800">Dashboard</a>
             <a href="/entries" class="text-gray-600 hover:text-gray-800">All Entries</a>
@@ -53,6 +53,20 @@
     <!-- Edit Form -->
     <form action="/entries/{{ entry.id }}" method="post" class="space-y-8">
       <input type="hidden" name="_method" value="PUT">
+      
+      <!-- Title Section -->
+      <div class="bg-white p-6 rounded-lg border border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+          <span class="text-2xl mr-3">📝</span>
+          Entry Title
+        </h2>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Custom Title (optional)</label>
+          <input type="text" id="title" name="title" value="{{ entry.title or '' }}"
+                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                 placeholder="Custom title or keep auto-generated">
+        </div>
+      </div>
       
       <!-- Successes Section -->
       <div class="bg-white p-6 rounded-lg border border-gray-200">
@@ -164,21 +178,19 @@
         </div>
       </div>
 
-      <!-- Journal Section (if exists) -->
-      {% if entry.journal %}
+      <!-- Journal Section -->
       <div class="bg-white p-6 rounded-lg border border-gray-200">
         <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <span class="text-2xl mr-3">📝</span>
-          Journal Reflection
+          <span class="text-2xl mr-3">📖</span>
+          Daily Journal
         </h2>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Free-form thoughts</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Free-form thoughts (optional)</label>
           <textarea name="journal" rows="4"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Any additional thoughts or reflections...">{{ entry.journal or '' }}</textarea>
+                    placeholder="Any additional thoughts, reflections, or details about your day...">{{ entry.journal or '' }}</textarea>
         </div>
       </div>
-      {% endif %}
 
       <!-- Action Buttons -->
       <div class="flex justify-between">
@@ -230,6 +242,22 @@
       } catch (error) {
         console.error('Update error:', error);
         alert('Error updating entry. Please try again.');
+      }
+    });
+  </script>
+  
+  <!-- Entry Titles JavaScript -->
+  <script src="/static/js/entry-titles.js"></script>
+  
+  <script>
+    // Initialize title field for edit form
+    document.addEventListener('DOMContentLoaded', function() {
+      const titleInput = document.getElementById('title');
+      if (titleInput && !titleInput.value.trim()) {
+        // Auto-generate title for the entry date
+        const entryDate = '{{ entry.entry_date }}';
+        titleInput.value = window.EntryTitles ? window.EntryTitles.generateAutoTitle(entryDate) : entryDate;
+        titleInput.placeholder = 'Enter custom title or keep auto-generated';
       }
     });
   </script>

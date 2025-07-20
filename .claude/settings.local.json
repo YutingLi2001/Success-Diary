@@ -41,7 +41,13 @@
       "Bash(if exist db.sqlite3 del db.sqlite3)",
       "Bash(taskkill:*)",
       "Bash(icacls:*)",
-      "Bash(ren:*)"
+      "Bash(ren:*)",
+      "Bash(npm run build-css-prod:*)",
+      "Bash(grep:*)",
+      "Bash(npm run build-css:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(scriptswindowsutilitiesreset-db.bat)",
+      "Bash(scripts/windows/utilities/reset-db.bat:*)"
     ],
     "deny": []
   }
