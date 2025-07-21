@@ -13,8 +13,7 @@ from app.models import User
 
 def get_user_effective_timezone(user: User) -> str:
     """
-    Get user's effective timezone using priority chain:
-    Manual setting → Auto-detection → UTC fallback
+    Get user's effective timezone using simple auto-detection.
     
     Args:
         user: User model instance
@@ -22,19 +21,8 @@ def get_user_effective_timezone(user: User) -> str:
     Returns:
         str: Timezone string (e.g., 'America/New_York')
     """
-    # Priority chain implementation
-    if user.user_timezone:
-        return user.user_timezone
-    
-    if user.timezone_auto_detect and user.last_detected_timezone:
-        return user.last_detected_timezone
-    
-    # Legacy fallback
-    if user.timezone:
-        return user.timezone
-        
-    # Final fallback
-    return 'UTC'
+    # Simple auto-detection: detected → legacy → UTC
+    return user.last_detected_timezone or user.timezone or 'UTC'
 
 
 def get_user_local_date(user: User) -> date:
@@ -112,6 +100,50 @@ def format_user_date(user: User, target_date: date, format_type: str = 'full') -
         return target_date.strftime('%A, %B %d, %Y')
 
 
+def format_user_timestamp(user: User, timestamp: datetime, format_type: str = 'full') -> str:
+    """
+    Format a UTC timestamp for display in user's local timezone.
+    
+    Args:
+        user: User model instance
+        timestamp: UTC datetime to format
+        format_type: 'full', 'short', or 'time_only'
+        
+    Returns:
+        str: Formatted timestamp string in user's timezone
+    """
+    try:
+        # Get user's effective timezone
+        user_tz_str = get_user_effective_timezone(user)
+        user_tz = pytz.timezone(user_tz_str)
+        
+        # Convert UTC timestamp to user's timezone
+        if timestamp.tzinfo is None:
+            # Assume UTC if no timezone info
+            utc_timestamp = pytz.utc.localize(timestamp)
+        else:
+            utc_timestamp = timestamp.astimezone(pytz.utc)
+        
+        local_timestamp = utc_timestamp.astimezone(user_tz)
+        
+        # Format based on type
+        if format_type == 'short':
+            return local_timestamp.strftime('%m/%d/%Y %I:%M %p')
+        elif format_type == 'time_only':
+            return local_timestamp.strftime('%I:%M %p')
+        else:  # full
+            return local_timestamp.strftime('%B %d, %Y at %I:%M %p')
+            
+    except Exception as e:
+        # Fallback to UTC if timezone conversion fails
+        if format_type == 'short':
+            return timestamp.strftime('%m/%d/%Y %I:%M %p UTC')
+        elif format_type == 'time_only':
+            return timestamp.strftime('%I:%M %p UTC')
+        else:  # full
+            return timestamp.strftime('%B %d, %Y at %I:%M %p UTC')
+
+
 def validate_timezone(timezone_str: str) -> bool:
     """
     Validate if a timezone string is valid.
@@ -162,6 +194,23 @@ def get_common_timezones() -> list[dict]:
         {'value': tz, 'label': label}
         for tz, label in common_zones
     ]
+
+
+def get_common_timezones_with_offsets() -> list[dict]:
+    """
+    Get list of common timezone choices with UTC offsets for UI dropdowns.
+    Format: "(UTC±X) Timezone Name (City)"
+    
+    Returns:
+        list: List of timezone dictionaries with 'value' and 'label' including UTC offsets
+    """
+    timezones = get_common_timezones()
+    
+    for tz in timezones:
+        offset = get_timezone_offset_display(tz['value'])
+        tz['label'] = f"({offset}) {tz['label']}"
+    
+    return timezones
 
 
 def get_timezone_offset_display(timezone_str: str) -> str:
