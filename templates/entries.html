@@ -88,6 +88,15 @@
                  onkeyup="filterEntries()">
         </div>
         <div class="flex gap-2">
+          <!-- Sort Toggle -->
+          <button id="sortToggle" 
+                  class="px-4 py-3 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-200 font-medium min-h-[44px] flex items-center gap-2"
+                  onclick="toggleSortOrder()">
+            <span id="sortText">{{ 'Newest First' if sort_preference == 'newest_first' else 'Oldest First' }}</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+            </svg>
+          </button>
           <select id="yearFilter" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[44px]" onchange="filterEntries()">
             <option value="">All Years</option>
             {% for year in years %}
@@ -271,6 +280,45 @@
           section.style.display = 'none';
         }
       });
+    }
+
+    // Sort toggle functionality
+    let currentSortPreference = '{{ sort_preference }}';
+    
+    async function toggleSortOrder() {
+      const button = document.getElementById('sortToggle');
+      const sortText = document.getElementById('sortText');
+      
+      // Toggle the preference
+      const newPreference = currentSortPreference === 'newest_first' ? 'oldest_first' : 'newest_first';
+      
+      try {
+        // Show loading state
+        button.disabled = true;
+        sortText.textContent = 'Updating...';
+        
+        // Send request to update preference
+        const response = await fetch('/api/user/update-sort-preference', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ sort_preference: newPreference })
+        });
+        
+        if (response.ok) {
+          // Update was successful, reload the page to reflect new sort order
+          window.location.reload();
+        } else {
+          throw new Error('Failed to update sort preference');
+        }
+      } catch (error) {
+        console.error('Error updating sort preference:', error);
+        // Reset button state on error
+        button.disabled = false;
+        sortText.textContent = currentSortPreference === 'newest_first' ? 'Newest First' : 'Oldest First';
+        alert('Failed to update sort preference. Please try again.');
+      }
     }
 
     // Initialize filters

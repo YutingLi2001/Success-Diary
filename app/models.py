@@ -19,6 +19,7 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     last_detected_timezone: Optional[str] = Column(String(50), nullable=True)  # Browser detection cache
     # Legacy timezone field (maintain compatibility)
     timezone: Optional[str] = Column(String(50), nullable=True, default="UTC")
+    entry_sort_preference: str = Column(String(20), nullable=False, default="newest_first")  # 'newest_first' | 'oldest_first'
     verification_code: Optional[str] = Column(String(6), nullable=True)
     verification_code_expires: Optional[datetime] = Column(DateTime, nullable=True)
 
@@ -26,16 +27,19 @@ class UserRead(schemas.BaseUser[uuid.UUID]):
     display_name: Optional[str]
     last_detected_timezone: Optional[str]
     timezone: Optional[str]  # Legacy field
+    entry_sort_preference: str
 
 class UserCreate(schemas.BaseUserCreate):
     display_name: Optional[str] = None
     last_detected_timezone: Optional[str] = None
     timezone: Optional[str] = "UTC"  # Legacy field
+    entry_sort_preference: str = "newest_first"
 
 class UserUpdate(schemas.BaseUserUpdate):
     display_name: Optional[str] = None
     last_detected_timezone: Optional[str] = None
     timezone: Optional[str] = None  # Legacy field
+    entry_sort_preference: Optional[str] = None
 
 class Entry(SQLModel, table=True):
     __tablename__ = "entry"

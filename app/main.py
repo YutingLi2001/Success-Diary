@@ -156,6 +156,7 @@ async def index(request: Request, db: Session = Depends(get_session)):
     
     print(f"User found: {user.email}, verified: {user.is_verified}")
     # For now, let's allow unverified users to access the dashboard
+    # Dashboard always shows most recent entries (newest first) regardless of user preference
     entries = db.query(Entry).filter(Entry.user_id == str(user.id)).order_by(Entry.entry_date.desc()).limit(3).all()
     
     # Check if user can create entry today (one-entry-per-day constraint)
@@ -194,8 +195,14 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
     if not user.is_verified:
         return RedirectResponse("/verify?email=" + user.email, status_code=303)
     
-    # Get all entries for the user
-    entries = db.query(Entry).filter(Entry.user_id == str(user.id)).order_by(Entry.entry_date.desc()).all()
+    # Get all entries for the user with sort preference
+    # Use user's sort preference, fallback to 'newest_first' for existing users
+    sort_preference = getattr(user, 'entry_sort_preference', 'newest_first')
+    
+    if sort_preference == 'oldest_first':
+        entries = db.query(Entry).filter(Entry.user_id == str(user.id)).order_by(Entry.entry_date.asc()).all()
+    else:
+        entries = db.query(Entry).filter(Entry.user_id == str(user.id)).order_by(Entry.entry_date.desc()).all()
     
     # Calculate statistics
     total_entries = len(entries)
@@ -225,11 +232,13 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
         year, month = period_key.split('-')
         period_entries = entries_by_period[period_key]
         
+        # Sort entries within each period according to user preference
+        reverse_sort = sort_preference != 'oldest_first'
         periods_list.append({
             'year': year,
             'month': month,
             'month_name': calendar.month_name[int(month)],
-            'entries': sorted(period_entries, key=lambda x: x.entry_date, reverse=True),
+            'entries': sorted(period_entries, key=lambda x: x.entry_date, reverse=reverse_sort),
             'avg_score': sum(e.score for e in period_entries) / len(period_entries)
         })
     
@@ -256,7 +265,8 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
         "format_user_timestamp": format_user_timestamp,
         "unique_months": unique_months,
         "streak_days": streak_days,
-        "years": sorted(years, reverse=True)
+        "years": sorted(years, reverse=True),
+        "sort_preference": sort_preference
     })
 
 @app.get("/analytics", response_class=HTMLResponse)
@@ -785,6 +795,36 @@ async def update_detected_timezone(
     except Exception as e:
         print(f"Error updating detected timezone: {e}")
         raise HTTPException(status_code=400, detail="Failed to update timezone")
+
+
+@app.post("/api/user/update-sort-preference")
+async def update_sort_preference(
+    request: Request,
+    user: User = Depends(current_active_user)
+):
+    """Update user's entry sort preference."""
+    try:
+        data = await request.json()
+        sort_preference = data.get('sort_preference')
+        
+        # Validate sort preference value
+        if sort_preference not in ['newest_first', 'oldest_first']:
+            raise HTTPException(status_code=400, detail="Invalid sort preference")
+        
+        # Update sort preference in sync database
+        db = next(get_session())
+        db_user = db.query(User).filter(User.id == user.id).first()
+        
+        if db_user:
+            db_user.entry_sort_preference = sort_preference
+            db.commit()
+            print(f"Updated sort preference for {user.email}: {sort_preference}")
+        
+        return {"success": True, "sort_preference": sort_preference}
+        
+    except Exception as e:
+        print(f"Error updating sort preference: {e}")
+        raise HTTPException(status_code=400, detail="Failed to update sort preference")
 
 
 # Validation configuration endpoint
