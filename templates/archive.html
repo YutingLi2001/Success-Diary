@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Archive - Success Diary</title>
+  <link href="/static/css/output.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Navigation Header -->
+  <nav class="bg-white shadow-sm border-b">
+    <div class="max-w-4xl mx-auto px-4 md:px-6 py-4">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-6">
+          <a href="/" class="text-lg md:text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors duration-200">Success Diary</a>
+          <div class="hidden md:flex space-x-4">
+            <a href="/" class="text-gray-600 hover:text-gray-800">Dashboard</a>
+            <a href="/entries" class="text-gray-600 hover:text-gray-800">All Entries</a>
+            <a href="/archive" class="text-blue-600 font-medium border-b-2 border-blue-600 pb-1">Archive</a>
+            <a href="/analytics" class="text-gray-600 hover:text-gray-800">Analytics</a>
+            <a href="/settings" class="text-gray-600 hover:text-gray-800">Settings</a>
+          </div>
+        </div>
+        
+        <!-- Mobile Menu Button -->
+        <button class="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 min-h-[44px] min-w-[44px]" 
+                onclick="toggleMobileMenu()" aria-label="Toggle menu">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        
+        <!-- Desktop User Menu -->
+        <div class="hidden md:flex items-center space-x-4">
+          <span class="text-sm text-gray-600">Welcome, {{ user.display_name or user.email }}</span>
+          <button onclick="logout()" class="text-red-600 hover:text-red-800 text-sm font-medium min-h-[44px] px-2">Logout</button>
+        </div>
+      </div>
+      
+      <!-- Mobile Menu Dropdown -->
+      <div id="mobileMenu" class="hidden md:hidden mt-4 py-4 border-t border-gray-200">
+        <div class="flex flex-col space-y-3">
+          <a href="/" class="text-gray-600 hover:text-gray-800 py-2 min-h-[44px] flex items-center">Dashboard</a>
+          <a href="/entries" class="text-gray-600 hover:text-gray-800 py-2 min-h-[44px] flex items-center">All Entries</a>
+          <a href="/archive" class="text-blue-600 font-medium py-2 min-h-[44px] flex items-center">Archive</a>
+          <a href="/analytics" class="text-gray-600 hover:text-gray-800 py-2 min-h-[44px] flex items-center">Analytics</a>
+          <a href="/settings" class="text-gray-600 hover:text-gray-800 py-2 min-h-[44px] flex items-center">Settings</a>
+          <div class="pt-3 border-t border-gray-200">
+            <div class="text-sm text-gray-600 mb-2">{{ user.display_name or user.email }}</div>
+            <button onclick="logout()" class="text-red-600 hover:text-red-800 text-sm font-medium min-h-[44px] flex items-center">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto p-4 md:p-6">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Archive</h1>
+      <p class="text-gray-600">Archived entries hidden from main views but preserved for your reference</p>
+      
+      <!-- Archive Info Banner -->
+      {% if total_archived == 0 %}
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div>
+            <h3 class="text-blue-800 font-medium">No archived entries</h3>
+            <p class="text-blue-700 text-sm">When you archive entries from your main collection, they will appear here.</p>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <!-- Stats Summary -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-6">
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+          <div class="text-2xl font-bold text-orange-600">{{ total_archived }}</div>
+          <div class="text-sm text-gray-600">Archived Entries</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+          <div class="text-2xl font-bold text-green-600">{{ avg_score|round(1) }}/5</div>
+          <div class="text-sm text-gray-600">Average Rating</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+          <div class="text-2xl font-bold text-purple-600">{{ entries|length }}</div>
+          <div class="text-sm text-gray-600">Available</div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if total_archived > 0 %}
+    <!-- Archive Controls -->
+    <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+      <div class="flex flex-col gap-4 md:flex-row">
+        <div class="flex-1">
+          <input type="text" id="searchInput" placeholder="Search archived entries..." 
+                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
+                 onkeyup="filterEntries()">
+        </div>
+        <div class="flex gap-2">
+          <button id="sortToggle" 
+                  class="px-4 py-3 bg-orange-50 text-orange-700 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors duration-200 font-medium min-h-[44px] flex items-center gap-2"
+                  onclick="toggleSortOrder()">
+            <span id="sortText">{{ 'Newest First' if sort_preference == 'newest_first' else 'Oldest First' }}</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Archived Entries List -->
+    <div class="space-y-6">
+      {% for entry in entries %}
+      <div class="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow duration-200 entry-card"
+           data-content="{{ entry.success_1 }} {{ entry.gratitude_1 }} {{ entry.anxiety_1 }} {{ entry.journal or '' }}">
+        
+        <!-- Entry Header with Archive Info -->
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ entry.title or entry.entry_date.strftime('%B %d, %Y') }}</h3>
+            <div class="flex items-center text-sm text-gray-500 space-x-4">
+              <span>{{ entry.entry_date.strftime('%A, %B %d, %Y') }}</span>
+              <span class="text-orange-600 font-medium">Archived {{ format_user_timestamp(user, entry.archived_at).split(',')[0] }}</span>
+              {% if entry.archived_reason %}
+              <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">{{ entry.archived_reason.replace('_', ' ').title() }}</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">{{ entry.score }}/10</span>
+            <button onclick="unarchiveEntry({{ entry.id }})" 
+                    class="px-3 py-2 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200 text-sm font-medium min-h-[44px]">
+              Restore
+            </button>
+          </div>
+        </div>
+
+        <!-- Entry Preview -->
+        <div class="border-t pt-4">
+          <p class="text-gray-700 leading-relaxed">
+            {{ (entry.success_1[:120] + '...' if entry.success_1|length > 120 else entry.success_1) }}
+          </p>
+          <a href="/entries/{{ entry.id }}/view" 
+             class="inline-block mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+            View Full Entry →
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Back to Active Entries -->
+    <div class="mt-8 text-center">
+      <a href="/entries" 
+         class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Back to Active Entries
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Mobile menu toggle
+    function toggleMobileMenu() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      mobileMenu.classList.toggle('hidden');
+    }
+    
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const menuButton = event.target.closest('button[onclick="toggleMobileMenu()"]');
+      
+      if (!mobileMenu.contains(event.target) && !menuButton && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+      }
+    });
+    
+    async function logout() {
+      try {
+        const response = await fetch('/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+      } catch (error) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+      }
+    }
+
+    function filterEntries() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const entries = document.querySelectorAll('.entry-card');
+      
+      entries.forEach(entry => {
+        const content = entry.getAttribute('data-content');
+        if (searchTerm === '' || content.toLowerCase().includes(searchTerm)) {
+          entry.style.display = 'block';
+        } else {
+          entry.style.display = 'none';
+        }
+      });
+    }
+
+    // Sort toggle functionality
+    let currentSortPreference = '{{ sort_preference }}';
+    
+    async function toggleSortOrder() {
+      const button = document.getElementById('sortToggle');
+      const sortText = document.getElementById('sortText');
+      
+      // Toggle the preference
+      const newPreference = currentSortPreference === 'newest_first' ? 'oldest_first' : 'newest_first';
+      
+      try {
+        // Show loading state
+        button.disabled = true;
+        sortText.textContent = 'Updating...';
+        
+        // Send request to update preference
+        const response = await fetch('/api/user/update-sort-preference', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ sort_preference: newPreference })
+        });
+        
+        if (response.ok) {
+          // Update was successful, reload the page to reflect new sort order
+          window.location.reload();
+        } else {
+          throw new Error('Failed to update sort preference');
+        }
+      } catch (error) {
+        console.error('Error updating sort preference:', error);
+        // Reset button state on error
+        button.disabled = false;
+        sortText.textContent = currentSortPreference === 'newest_first' ? 'Newest First' : 'Oldest First';
+        alert('Failed to update sort preference. Please try again.');
+      }
+    }
+
+    // Unarchive entry functionality
+    async function unarchiveEntry(entryId) {
+      try {
+        const response = await fetch(`/entries/${entryId}/unarchive`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          // Remove the entry from the archive view
+          const entryElement = document.querySelector(`[data-entry-id="${entryId}"]`);
+          if (entryElement) {
+            entryElement.remove();
+          } else {
+            // Fallback: reload the page
+            window.location.reload();
+          }
+          
+          // Show success message
+          alert('Entry restored from archive successfully!');
+        } else {
+          throw new Error('Failed to unarchive entry');
+        }
+      } catch (error) {
+        console.error('Error unarchiving entry:', error);
+        alert('Failed to restore entry. Please try again.');
+      }
+    }
+
+    // Initialize filters
+    document.addEventListener('DOMContentLoaded', function() {
+      if (document.getElementById('searchInput')) {
+        filterEntries();
+      }
+    });
+  </script>
+</body>
+</html>
