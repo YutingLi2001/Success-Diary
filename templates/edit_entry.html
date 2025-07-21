@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <title>Edit Entry - Success Diary</title>
   <link href="/static/css/output.css" rel="stylesheet">
+  <link href="/static/css/progressive-ui.css" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+  <script src="/static/js/progressive-ui.js" defer></script>
+  <script src="/static/js/unsaved-changes-warning.js" defer></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <!-- Navigation Header -->
@@ -51,157 +55,11 @@
     </div>
 
     <!-- Edit Form -->
-    <form action="/entries/{{ entry.id }}" method="post" class="space-y-8">
-      <input type="hidden" name="_method" value="PUT">
-      
-      <!-- Title Section -->
-      <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <span class="text-2xl mr-3">📝</span>
-          Entry Title
-        </h2>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Custom Title (optional)</label>
-          <input type="text" id="title" name="title" value="{{ entry.title or '' }}"
-                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                 placeholder="Custom title or keep auto-generated">
-        </div>
-      </div>
-      
-      <!-- Successes Section -->
-      <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <span class="text-2xl mr-3">🎉</span>
-          Today's Successes
-        </h2>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Success #1 *</label>
-            <input type="text" name="success_1" value="{{ entry.success_1 }}"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="What went well today?">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Success #2</label>
-            <input type="text" name="success_2" value="{{ entry.success_2 or '' }}"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="Another win?">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Success #3</label>
-            <input type="text" name="success_3" value="{{ entry.success_3 or '' }}"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="One more success?">
-          </div>
-        </div>
-      </div>
-
-      <!-- Gratitude Section -->
-      <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <span class="text-2xl mr-3">🙏</span>
-          Gratitude
-        </h2>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Grateful for #1 *</label>
-            <input type="text" name="gratitude_1" value="{{ entry.gratitude_1 }}"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="What are you grateful for?">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Grateful for #2</label>
-            <input type="text" name="gratitude_2" value="{{ entry.gratitude_2 or '' }}"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="Another thing you're grateful for?">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Grateful for #3</label>
-            <input type="text" name="gratitude_3" value="{{ entry.gratitude_3 or '' }}"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="One more thing?">
-          </div>
-        </div>
-      </div>
-
-      <!-- Anxiety/Concerns Section -->
-      <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <span class="text-2xl mr-3">💭</span>
-          Today's Worries
-        </h2>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Worry #1 *</label>
-            <input type="text" name="anxiety_1" value="{{ entry.anxiety_1 }}"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="What's weighing on your mind?">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Worry #2</label>
-            <input type="text" name="anxiety_2" value="{{ entry.anxiety_2 or '' }}"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="Another worry?">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Worry #3</label>
-            <input type="text" name="anxiety_3" value="{{ entry.anxiety_3 or '' }}"
-                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                   placeholder="One more worry?">
-          </div>
-        </div>
-      </div>
-
-      <!-- Overall Rating -->
-      <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <span class="text-2xl mr-3">⭐</span>
-          Overall Day Rating
-        </h2>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-3">How was your day overall? *</label>
-          <div class="flex space-x-4">
-            {% for i in range(1, 6) %}
-            <label class="flex flex-col items-center cursor-pointer">
-              <input type="radio" name="score" value="{{ i }}" 
-                     {% if entry.score == i %}checked{% endif %}
-                     class="sr-only peer" required>
-              <div class="w-12 h-12 border-2 border-gray-300 rounded-full flex items-center justify-center text-lg peer-checked:border-blue-500 peer-checked:bg-blue-100 hover:border-blue-400 transition-colors">
-                {{ i }}
-              </div>
-              <span class="text-xs text-gray-600 mt-1">
-                {% if i == 1 %}Terrible{% elif i == 2 %}Poor{% elif i == 3 %}Okay{% elif i == 4 %}Good{% else %}Amazing{% endif %}
-              </span>
-            </label>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-
-      <!-- Journal Section -->
-      <div class="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <span class="text-2xl mr-3">📖</span>
-          Daily Journal
-        </h2>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Free-form thoughts (optional)</label>
-          <textarea name="journal" rows="4"
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Any additional thoughts, reflections, or details about your day...">{{ entry.journal or '' }}</textarea>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex justify-between">
-        <a href="/entries" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
-          Cancel
-        </a>
-        <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition duration-200">
-          Update Entry
-        </button>
-      </div>
-    </form>
+    <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6">
+      {% set edit_mode = true %}
+      {% set action_url = "/entries/" + entry.id|string %}
+      {% include 'shared/entry_form.html' %}
+    </div>
   </div>
 
   <script>

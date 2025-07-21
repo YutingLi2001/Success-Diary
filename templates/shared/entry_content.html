@@ -1,0 +1,90 @@
+<!-- Shared Entry Content Template -->
+<!-- This template displays entry content and can be used in both detail and edit views -->
+
+<!-- Successes Section -->
+<div class="bg-white p-6 rounded-lg border border-gray-200">
+  <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+    <span class="text-2xl mr-3">🎉</span>
+    Today's Successes
+  </h2>
+  <div class="space-y-3">
+    {% if entry.success_1 %}
+    <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+      <p class="text-gray-800">{{ entry.success_1 }}</p>
+    </div>
+    {% endif %}
+    {% if entry.success_2 %}
+    <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-300">
+      <p class="text-gray-700">{{ entry.success_2 }}</p>
+    </div>
+    {% endif %}
+    {% if entry.success_3 %}
+    <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-300">
+      <p class="text-gray-700">{{ entry.success_3 }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Gratitude Section -->
+<div class="bg-white p-6 rounded-lg border border-gray-200">
+  <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+    <span class="text-2xl mr-3">🙏</span>
+    Gratitude
+  </h2>
+  <div class="space-y-3">
+    {% if entry.gratitude_1 %}
+    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
+      <p class="text-gray-800">{{ entry.gratitude_1 }}</p>
+    </div>
+    {% endif %}
+    {% if entry.gratitude_2 %}
+    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-300">
+      <p class="text-gray-700">{{ entry.gratitude_2 }}</p>
+    </div>
+    {% endif %}
+    {% if entry.gratitude_3 %}
+    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-300">
+      <p class="text-gray-700">{{ entry.gratitude_3 }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Worries Section -->
+<div class="bg-white p-6 rounded-lg border border-gray-200">
+  <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+    <span class="text-2xl mr-3">💭</span>
+    Today's Worries
+  </h2>
+  <div class="space-y-3">
+    {% if entry.anxiety_1 %}
+    <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-400">
+      <p class="text-gray-800">{{ entry.anxiety_1 }}</p>
+    </div>
+    {% endif %}
+    {% if entry.anxiety_2 %}
+    <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-300">
+      <p class="text-gray-700">{{ entry.anxiety_2 }}</p>
+    </div>
+    {% endif %}
+    {% if entry.anxiety_3 %}
+    <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-300">
+      <p class="text-gray-700">{{ entry.anxiety_3 }}</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Journal Section -->
+{% if entry.journal %}
+<div class="bg-white p-6 rounded-lg border border-gray-200">
+  <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+    <span class="text-2xl mr-3">📖</span>
+    Daily Journal
+  </h2>
+  <div class="bg-gray-50 p-4 rounded-lg">
+    <p class="text-gray-800 whitespace-pre-wrap">{{ entry.journal }}</p>
+  </div>
+</div>
+{% endif %}
