@@ -1,0 +1,50 @@
+<!-- Shared Entry Card Template -->
+<!-- Usage: include this with entry, user, and action_type context -->
+<div class="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow duration-200 entry-card"
+     data-content="{{ entry.success_1 }} {{ entry.gratitude_1 }} {{ entry.anxiety_1 }} {{ entry.journal or '' }}">
+  
+  <!-- Entry Header -->
+  <div class="flex justify-between items-start mb-4">
+    <div class="flex-1">
+      <h3 class="text-lg font-semibold text-gray-800 mb-1">
+        {% if entry.title %}
+          {{ entry.title }}
+        {% else %}
+          {{ entry.entry_date.strftime('%B %d, %Y') }}
+        {% endif %}
+      </h3>
+      <div class="flex items-center text-sm text-gray-500 space-x-4">
+        <span>{{ entry.entry_date.strftime('%A, %B %d, %Y') }}</span>
+        {% if action_type == 'archive' %}
+          <span class="text-orange-600 font-medium">Archived {{ format_user_timestamp(user, entry.archived_at).split(',')[0] }}</span>
+          {% if entry.archived_reason %}
+          <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">{{ entry.archived_reason.replace('_', ' ').title() }}</span>
+          {% endif %}
+        {% elif entry.was_edited %}
+          <span class="text-gray-500">Edited {{ format_user_timestamp(user, entry.updated_at, 'short') }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">{{ entry.score }}/5</span>
+      {% if entry.score >= 4 %}
+        <span class="text-lg">😊</span>
+      {% elif entry.score >= 3 %}
+        <span class="text-lg">😐</span>
+      {% else %}
+        <span class="text-lg">😔</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Entry Preview -->
+  <div class="border-t pt-4">
+    <p class="text-gray-700 leading-relaxed">
+      {{ (entry.success_1[:120] + '...' if entry.success_1|length > 120 else entry.success_1) }}
+    </p>
+    <a href="/entries/{{ entry.id }}/view" 
+       class="inline-block mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+      View Full Entry →
+    </a>
+  </div>
+</div>

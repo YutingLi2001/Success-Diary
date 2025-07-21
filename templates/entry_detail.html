@@ -19,6 +19,7 @@
           <div class="hidden md:flex space-x-4">
             <a href="/" class="text-gray-600 hover:text-gray-800">Dashboard</a>
             <a href="/entries" class="text-blue-600 font-medium border-b-2 border-blue-600 pb-1">All Entries</a>
+            <a href="/archive" class="text-gray-600 hover:text-gray-800">Archive</a>
             <a href="/analytics" class="text-gray-600 hover:text-gray-800">Analytics</a>
             <a href="/settings" class="text-gray-600 hover:text-gray-800">Settings</a>
           </div>
@@ -43,6 +44,7 @@
         <div class="flex flex-col space-y-2">
           <a href="/" class="text-gray-600 hover:text-gray-800 py-2 px-1">Dashboard</a>
           <a href="/entries" class="text-blue-600 font-medium py-2 px-1">All Entries</a>
+          <a href="/archive" class="text-gray-600 hover:text-gray-800 py-2 px-1">Archive</a>
           <a href="/analytics" class="text-gray-600 hover:text-gray-800 py-2 px-1">Analytics</a>
           <a href="/settings" class="text-gray-600 hover:text-gray-800 py-2 px-1">Settings</a>
           <div class="border-t pt-2 mt-2">
@@ -89,7 +91,7 @@
             </p>
           {% endif %}
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
           <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-medium">{{ entry.score }}/5</span>
           {% if entry.score >= 4 %}
             <span class="text-2xl">😊</span>
@@ -98,11 +100,20 @@
           {% else %}
             <span class="text-2xl">😔</span>
           {% endif %}
-          <a href="/entries/{{ entry.id }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition duration-200 text-sm">
-            Edit Entry
-          </a>
-          <button onclick="deleteEntry({{ entry.id }})" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition duration-200 text-sm">
-            Delete Entry
+          {% if entry.is_archived %}
+            <button onclick="unarchiveEntry({{ entry.id }})" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition duration-200 text-xs whitespace-nowrap">
+              Restore
+            </button>
+          {% else %}
+            <a href="/entries/{{ entry.id }}" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition duration-200 text-xs whitespace-nowrap">
+              Edit
+            </a>
+            <button onclick="archiveEntry({{ entry.id }})" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium transition duration-200 text-xs whitespace-nowrap border border-purple-800" style="background-color: #7c3aed !important; color: white !important;">
+              Archive
+            </button>
+          {% endif %}
+          <button onclick="deleteEntry({{ entry.id }})" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition duration-200 text-xs whitespace-nowrap">
+            Delete
           </button>
         </div>
       </div>
@@ -220,6 +231,61 @@
       } catch (error) {
         localStorage.removeItem('access_token');
         window.location.href = '/login';
+      }
+    }
+    
+    async function archiveEntry(entryId) {
+      if (!confirm('Are you sure you want to archive this entry? It will be hidden from your main entries but can be restored from the Archive section.')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/entries/${entryId}/archive`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ reason: null }) // Optional: could add reason selection UI
+        });
+        
+        if (response.ok) {
+          alert('Entry archived successfully!');
+          // Redirect to entries page after successful archiving
+          window.location.href = '/entries';
+        } else {
+          const error = await response.json();
+          alert('Failed to archive entry: ' + (error.detail || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Archive error:', error);
+        alert('Failed to archive entry. Please try again.');
+      }
+    }
+    
+    async function unarchiveEntry(entryId) {
+      if (!confirm('Are you sure you want to restore this entry from the archive? It will appear in your main entries again.')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/entries/${entryId}/unarchive`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          alert('Entry restored from archive successfully!');
+          // Redirect to entries page after successful unarchiving
+          window.location.href = '/entries';
+        } else {
+          const error = await response.json();
+          alert('Failed to restore entry: ' + (error.detail || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Unarchive error:', error);
+        alert('Failed to restore entry. Please try again.');
       }
     }
     

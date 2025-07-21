@@ -56,7 +56,10 @@
       "Bash(wmic process where:*)",
       "Bash(del:*)",
       "Bash(git rm:*)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "Bash(scripts\\windows\\reset-db.bat)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   }

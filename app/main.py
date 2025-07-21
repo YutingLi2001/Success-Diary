@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from fastapi import FastAPI, Request, Depends, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 from pathlib import Path
 from app.database import engine, init_db, get_session
-from app.models import Entry, EntryUpdate, EntryRead, User, UserCreate, UserRead, UserUpdate
+from app.models import Entry, EntryUpdate, EntryRead, User, UserCreate, UserRead, UserUpdate, ArchiveRequest
 from app.timezone_utils import get_user_local_date, format_user_timestamp, get_user_date_range
 from app.auth import auth_backend, fastapi_users, current_active_user, current_verified_user, google_oauth_router, github_oauth_router
 from fastapi.templating import Jinja2Templates
@@ -156,7 +156,12 @@ async def index(request: Request, db: Session = Depends(get_session)):
     
     print(f"User found: {user.email}, verified: {user.is_verified}")
     # For now, let's allow unverified users to access the dashboard
-    entries = db.query(Entry).filter(Entry.user_id == str(user.id)).order_by(Entry.entry_date.desc()).limit(3).all()
+    # Dashboard always shows most recent active entries (newest first) regardless of user preference
+    # Exclude archived entries from dashboard view
+    entries = db.query(Entry).filter(
+        Entry.user_id == str(user.id),
+        Entry.is_archived == False
+    ).order_by(Entry.entry_date.desc()).limit(3).all()
     
     # Check if user can create entry today (one-entry-per-day constraint)
     db_user = db.query(User).filter(User.id == user.id).first()
@@ -194,8 +199,21 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
     if not user.is_verified:
         return RedirectResponse("/verify?email=" + user.email, status_code=303)
     
-    # Get all entries for the user
-    entries = db.query(Entry).filter(Entry.user_id == str(user.id)).order_by(Entry.entry_date.desc()).all()
+    # Get all entries for the user with sort preference
+    # Use user's sort preference, fallback to 'newest_first' for existing users
+    sort_preference = getattr(user, 'entry_sort_preference', 'newest_first')
+    
+    # Exclude archived entries from main history view
+    if sort_preference == 'oldest_first':
+        entries = db.query(Entry).filter(
+            Entry.user_id == str(user.id),
+            Entry.is_archived == False
+        ).order_by(Entry.entry_date.asc()).all()
+    else:
+        entries = db.query(Entry).filter(
+            Entry.user_id == str(user.id),
+            Entry.is_archived == False
+        ).order_by(Entry.entry_date.desc()).all()
     
     # Calculate statistics
     total_entries = len(entries)
@@ -225,11 +243,13 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
         year, month = period_key.split('-')
         period_entries = entries_by_period[period_key]
         
+        # Sort entries within each period according to user preference
+        reverse_sort = sort_preference != 'oldest_first'
         periods_list.append({
             'year': year,
             'month': month,
             'month_name': calendar.month_name[int(month)],
-            'entries': sorted(period_entries, key=lambda x: x.entry_date, reverse=True),
+            'entries': sorted(period_entries, key=lambda x: x.entry_date, reverse=reverse_sort),
             'avg_score': sum(e.score for e in period_entries) / len(period_entries)
         })
     
@@ -256,7 +276,8 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
         "format_user_timestamp": format_user_timestamp,
         "unique_months": unique_months,
         "streak_days": streak_days,
-        "years": sorted(years, reverse=True)
+        "years": sorted(years, reverse=True),
+        "sort_preference": sort_preference
     })
 
 @app.get("/analytics", response_class=HTMLResponse)
@@ -476,11 +497,13 @@ def get_entry_for_date(user: User, target_date: date, db: Session) -> Entry | No
     # Get UTC date range for the target date in user's timezone
     start_utc, end_utc = get_user_date_range(user, target_date)
     
-    # Query for entries within this date range
+    # Query for active (non-archived) entries within this date range
+    # Archived entries don't count toward one-entry-per-day constraint
     existing_entry = db.query(Entry).filter(
         Entry.user_id == str(user.id),
         Entry.created_at >= start_utc,
-        Entry.created_at <= end_utc
+        Entry.created_at <= end_utc,
+        Entry.is_archived == False
     ).first()
     
     return existing_entry
@@ -641,6 +664,119 @@ async def update_entry(
     print(f"Entry {entry_id} updated successfully")
     return RedirectResponse("/entries", status_code=303)
 
+@app.post("/entries/{entry_id}/archive")
+async def archive_entry(
+    entry_id: int,
+    request: Request,
+    db: Session = Depends(get_session),
+    user: User = Depends(current_active_user)
+):
+    """Archive an entry (three-state system: Active → Archived → Deleted)"""
+    try:
+        # Get the entry
+        entry = db.query(Entry).filter(
+            Entry.id == entry_id,
+            Entry.user_id == str(user.id)
+        ).first()
+        
+        if not entry:
+            raise HTTPException(status_code=404, detail="Entry not found")
+        
+        if entry.is_archived:
+            raise HTTPException(status_code=400, detail="Entry is already archived")
+        
+        # Get archive data from request
+        data = await request.json() if request.headers.get("content-type") == "application/json" else {}
+        archive_reason = data.get("reason")
+        
+        # Archive the entry
+        entry.is_archived = True
+        entry.archived_at = datetime.utcnow()
+        entry.archived_reason = archive_reason
+        
+        db.commit()
+        print(f"Entry {entry_id} archived successfully")
+        
+        return {"status": "archived", "entry_id": entry_id}
+        
+    except Exception as e:
+        print(f"Error archiving entry {entry_id}: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to archive entry")
+
+@app.post("/entries/{entry_id}/unarchive")
+async def unarchive_entry(
+    entry_id: int,
+    db: Session = Depends(get_session),
+    user: User = Depends(current_active_user)
+):
+    """Unarchive an entry (restore to active state)"""
+    try:
+        # Get the entry
+        entry = db.query(Entry).filter(
+            Entry.id == entry_id,
+            Entry.user_id == str(user.id)
+        ).first()
+        
+        if not entry:
+            raise HTTPException(status_code=404, detail="Entry not found")
+        
+        if not entry.is_archived:
+            raise HTTPException(status_code=400, detail="Entry is not archived")
+        
+        # Unarchive the entry
+        entry.is_archived = False
+        entry.archived_at = None
+        entry.archived_reason = None
+        
+        db.commit()
+        print(f"Entry {entry_id} unarchived successfully")
+        
+        return {"status": "unarchived", "entry_id": entry_id}
+        
+    except Exception as e:
+        print(f"Error unarchiving entry {entry_id}: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to unarchive entry")
+
+@app.get("/archive", response_class=HTMLResponse)
+async def archive_page(request: Request, db: Session = Depends(get_session)):
+    """Archive page showing archived entries"""
+    user = await get_current_user_safe(request)
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    
+    if not user.is_verified:
+        return RedirectResponse("/verify?email=" + user.email, status_code=303)
+    
+    # Get archived entries with user's sort preference
+    sort_preference = getattr(user, 'entry_sort_preference', 'newest_first')
+    
+    if sort_preference == 'oldest_first':
+        entries = db.query(Entry).filter(
+            Entry.user_id == str(user.id),
+            Entry.is_archived == True
+        ).order_by(Entry.archived_at.asc()).all()
+    else:
+        entries = db.query(Entry).filter(
+            Entry.user_id == str(user.id),
+            Entry.is_archived == True
+        ).order_by(Entry.archived_at.desc()).all()
+    
+    # Calculate statistics
+    total_archived = len(entries)
+    avg_score = sum(e.score for e in entries) / total_archived if entries else 0
+    
+    return templates.TemplateResponse("archive.html", {
+        "request": request,
+        "user": user,
+        "entries": entries,
+        "total_archived": total_archived,
+        "avg_score": avg_score,
+        "format_user_timestamp": format_user_timestamp,
+        "sort_preference": sort_preference
+    })
+
 @app.get("/entries/{entry_id}/view", response_class=HTMLResponse)
 async def view_entry(
     entry_id: int,
@@ -785,6 +921,36 @@ async def update_detected_timezone(
     except Exception as e:
         print(f"Error updating detected timezone: {e}")
         raise HTTPException(status_code=400, detail="Failed to update timezone")
+
+
+@app.post("/api/user/update-sort-preference")
+async def update_sort_preference(
+    request: Request,
+    user: User = Depends(current_active_user)
+):
+    """Update user's entry sort preference."""
+    try:
+        data = await request.json()
+        sort_preference = data.get('sort_preference')
+        
+        # Validate sort preference value
+        if sort_preference not in ['newest_first', 'oldest_first']:
+            raise HTTPException(status_code=400, detail="Invalid sort preference")
+        
+        # Update sort preference in sync database
+        db = next(get_session())
+        db_user = db.query(User).filter(User.id == user.id).first()
+        
+        if db_user:
+            db_user.entry_sort_preference = sort_preference
+            db.commit()
+            print(f"Updated sort preference for {user.email}: {sort_preference}")
+        
+        return {"success": True, "sort_preference": sort_preference}
+        
+    except Exception as e:
+        print(f"Error updating sort preference: {e}")
+        raise HTTPException(status_code=400, detail="Failed to update sort preference")
 
 
 # Validation configuration endpoint

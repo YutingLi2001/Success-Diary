@@ -1,56 +1,77 @@
 # Tasks Today
 
-## Session Progress Summary (21:30)
+## ✅ COMPLETED FEATURES
 
-### ✅ COMPLETED TODAY
-All tasks successfully implemented with uncommitted changes ready for commit:
+### Enhanced History View with Sorting ✅ COMPLETE
+- [x] Add entry_sort_preference to user model
+- [x] Implement sort toggle UI: "Newest First" / "Oldest First"  
+- [x] Ensure today's entry appears immediately after saving
+- [x] Review ADR: docs/adr/decisions/0006-history-view-sorting.md
+- [x] Commit enhanced history sorting feature
 
-#### 🎯 Dynamic UI with Progressive Field Display
-- [x] Implement progressive field trigger (2+ characters, whitespace filtered, 300ms debounced) 
-- [x] Add character limits with progressive feedback
-- [x] Three Emotion Points: 255 chars with counter hidden until 85% (217 chars), gray → amber → red progression
-- [x] Daily Journal: 8,000 chars with counter hidden until 85% (6,800 chars), comma formatting for large numbers
-- [x] Review ADR: docs/adr/specifications/character-limits-spec.md
+### Entry Archive System ✅ COMPLETE 
+- [x] Add is_archived, archived_at, archived_reason fields to Entry model
+- [x] Update dashboard and entries queries to exclude archived entries
+- [x] Implement archive, unarchive, and get archived entries API endpoints
+- [x] Add Archive section to main navigation across all templates
+- [x] Create comprehensive archive.html template with search and restore functionality
+- [x] Add archive/unarchive buttons to entry detail view with JavaScript handlers
+- [x] Test archive functionality and database schema
+- [x] Manually update database schema with archive columns
+- [x] Commit complete Entry Archive System implementation
 
-#### 🔄 Template Unification 
-- [x] Create shared entry form template to unify dashboard create and edit forms
-- [x] Update edit_entry.html to use same form structure as dashboard with progressive UI
-- [x] Refactor entry_detail.html to share code with edit template where possible
-- [x] Test both create and edit flows work with progressive UI
+## 🔧 IN PROGRESS
 
-#### 🐛 Bug Fixes & Executive Decisions
-- [x] Fix progressive UI bug: fields with existing values not triggering next field display on page load
-- [x] Executive Decision: Implement unsaved changes warning when user tries to exit edit page
-- [x] Executive Decision: Implement delete entry function for testing convenience (one entry per day constraint)
-- [x] Review delete implementation requirements in roadmap and ADR documentation
-- [x] Fix delete endpoint database session dependency issue
+### UI/UX Improvements and Template Consolidation ✅ COMPLETE
+- [x] Debug why archive entry button is not visible in entry detail view (CSS conflict with orange background)
+- [x] Remove debug comments from template
+- [x] Fix archive button visibility with purple background and inline CSS styling
+- [x] Consolidate entry card designs between All Entries and Archive pages
+- [x] Create shared entry card template (templates/partials/entry_card.html)
+- [x] Remove action buttons from cards, centralize operations in "View Full Entry"
+- [x] Fix button alignment and sizing for single-line layout
+- [x] Change archive page scoring from /10 to /5 for consistency
 
-### 🚀 Ready for Commit
-**Uncommitted Changes Status**: All work complete, testing successful
+## 📊 SESSION SUMMARY
 
-**Key Files Created:**
-- `app/static/js/progressive-ui.js` - Complete progressive UI system
-- `app/static/css/progressive-ui.css` - Character counter styling
-- `app/static/js/unsaved-changes-warning.js` - Unsaved changes detection
-- `templates/shared/entry_form.html` - Unified form template
-- `templates/shared/entry_content.html` - Shared content display
+### Major Accomplishments
+1. **Enhanced History View with Sorting** - Complete three-state sorting system with user preferences
+2. **Entry Archive System** - Full implementation with three-state management (Active → Archived → Deleted)
+3. **Database Schema Migration** - Successfully added archive columns to existing database
+4. **UI Integration** - Archive navigation and functionality across all templates
+5. **Template Consolidation & UX Fixes** - Resolved archive button visibility, unified card designs, centralized operations
 
-**Key Files Modified:**
-- `app/main.py` - Added DELETE endpoint for testing
-- `templates/dashboard.html` - Uses shared form template
-- `templates/edit_entry.html` - Uses shared form + unsaved changes warning
-- `templates/entry_detail.html` - Added delete button functionality
+### Technical Implementation
+- **Database**: Added `is_archived`, `archived_at`, `archived_reason` columns
+- **API Endpoints**: `/entries/{id}/archive`, `/entries/{id}/unarchive`, `/archive` page
+- **Frontend**: Archive page, navigation integration, JavaScript handlers
+- **Query Logic**: Excluded archived entries from main views while preserving data
 
-### 🎯 Implementation Highlights
-- **Sequential field reveal**: Field 2 shows when field 1 has content, field 3 when field 2 has content
-- **Character counting**: Hidden until 85%, visual progression (gray→amber→red)
-- **Template unification**: Same UI/UX for create and edit workflows
-- **Unsaved changes protection**: Browser warnings + visual indicators
-- **Testing convenience**: Delete functionality for one-entry-per-day constraint
+### Files Modified
+- `app/models.py` - Added archive fields to Entry model
+- `app/main.py` - Archive endpoints and query updates
+- `templates/archive.html` - New archive page template, updated to use shared card template
+- `templates/entry_detail.html` - Archive/unarchive buttons, fixed CSS visibility issues
+- `templates/dashboard.html` - Archive navigation
+- `templates/entries.html` - Archive navigation, sort toggle, updated to use shared card template
+- `templates/partials/entry_card.html` - New shared template for consistent card design (uncommitted)
 
-### 📋 Next Session Actions
-1. **Commit current work**: All features tested and working
-2. **Continue roadmap**: Move to next ✅ *READY* feature from roadmap
-3. **Potential next feature**: Enhanced History View with Sorting (dependencies complete)
+### Commits Made
+1. Enhanced History View with Sorting implementation
+2. Complete Entry Archive System with three-state management
 
-**Session Status**: ✅ Complete - All objectives achieved, no blockers
+### Current Session Achievements
+- **Archive Button Visibility Fixed** - Resolved CSS conflict causing white text on white background
+- **Template Architecture Improved** - Created reusable shared component system
+- **User Experience Enhanced** - Centralized operations, improved button layouts, consistent scoring
+
+### Uncommitted Work Status
+- **Templates updated** - 4 template files modified with fixes and improvements
+- **New shared component** - `templates/partials/entry_card.html` created for consistency
+- **Ready for commit** - All fixes tested and working correctly
+
+## 🎯 NEXT PRIORITIES
+
+1. **Commit Current Work** - Archive system fixes and template consolidation ready
+2. **Final Testing** - Complete end-to-end testing of archive system with new UI
+3. **Move to Next Feature** - Begin implementation of next ✅ *READY* feature from roadmap

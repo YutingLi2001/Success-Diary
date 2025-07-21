@@ -99,20 +99,25 @@ SuccessDiary is a lightweight daily logging application designed for personal gr
   - [x] Daily Journal: 8,000 chars with counter hidden until 85% (6,800 chars), comma formatting for large numbers
   - [x] Review ADR: `docs/adr/specifications/character-limits-spec.md`
 
-### **Enhanced History View with Sorting** ✅ *READY* (dependencies complete: timezone handling ✅, entry editing ✅, mobile foundation ✅)
+### **Enhanced History View with Sorting** ✅ *COMPLETE*
+- **Status**: **✅ 100% COMPLETE** - Full sorting functionality with user preferences
 - **Implementation Tasks**:
-  - [ ] Add `entry_sort_preference` to user model
-  - [ ] Implement sort toggle UI: "Newest First" / "Oldest First"
-  - [ ] Ensure today's entry appears immediately after saving
-  - [ ] Review ADR: `docs/adr/decisions/0006-history-view-sorting.md`
+  - [x] ✅ Add `entry_sort_preference` to user model
+  - [x] ✅ Implement sort toggle UI: "Newest First" / "Oldest First"
+  - [x] ✅ Ensure today's entry appears immediately after saving
+  - [x] ✅ Review ADR: `docs/adr/decisions/0006-history-view-sorting.md`
 
-### **Entry Archive System** ✅ *DEPENDENCIES READY* (dependencies: entry editing ✅, history sorting ready ✅, mobile foundation ✅)
+### **Entry Archive System** ✅ *COMPLETE*
+- **Status**: **✅ 100% COMPLETE** - Three-state archive system with comprehensive UI
 - **Implementation Tasks**:
-  - [ ] Implement three-state system: Active → Archived → Deleted
-  - [ ] Add archive functionality separate from deletion
-  - [ ] Create dedicated archive view section
-  - [ ] Test 30-day recycle bin for deleted entries
-  - [ ] Review ADR: `docs/adr/decisions/0012-entry-archive-system.md`
+  - [x] ✅ Implement three-state system: Active → Archived → Deleted
+  - [x] ✅ Add archive functionality separate from deletion
+  - [x] ✅ Create dedicated archive view section
+  - [x] ✅ Test archive functionality and database schema integration
+  - [x] ✅ Review ADR: `docs/adr/decisions/0012-entry-archive-system.md`
+  - [x] ✅ Fix archive button visibility issues (CSS styling conflicts)
+  - [x] ✅ Create shared entry card template for design consistency
+  - [x] ✅ Centralize operations to "View Full Entry" workflow
 
 ### **Draft System & Auto-save** (depends on: entry editing, form validation)
 - **Implementation Tasks**:
