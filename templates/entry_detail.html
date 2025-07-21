@@ -101,6 +101,9 @@
           <a href="/entries/{{ entry.id }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition duration-200 text-sm">
             Edit Entry
           </a>
+          <button onclick="deleteEntry({{ entry.id }})" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition duration-200 text-sm">
+            Delete Entry
+          </button>
         </div>
       </div>
     </div>
@@ -217,6 +220,32 @@
       } catch (error) {
         localStorage.removeItem('access_token');
         window.location.href = '/login';
+      }
+    }
+    
+    async function deleteEntry(entryId) {
+      if (!confirm('Are you sure you want to delete this entry? This action cannot be undone.')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/entries/${entryId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          // Redirect to entries page after successful deletion
+          window.location.href = '/entries';
+        } else {
+          const error = await response.json();
+          alert('Failed to delete entry: ' + (error.detail || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Failed to delete entry. Please try again.');
       }
     }
     

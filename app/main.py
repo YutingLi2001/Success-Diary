@@ -696,6 +696,32 @@ async def get_entry(
     })
 
 
+@app.delete("/entries/{entry_id}")
+async def delete_entry(
+    request: Request,
+    entry_id: int,
+    db: Session = Depends(get_session)
+):
+    """Delete an entry (for testing convenience - simple hard delete)."""
+    user = await get_current_user_safe(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    if not user.is_verified:
+        raise HTTPException(status_code=403, detail="Email not verified")
+    
+    # Get the entry and verify ownership
+    entry = db.query(Entry).filter(Entry.id == entry_id, Entry.user_id == str(user.id)).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    
+    # Hard delete for testing convenience
+    db.delete(entry)
+    db.commit()
+    
+    return {"status": "deleted", "message": "Entry deleted successfully"}
+
+
 # Test endpoints for error handling (development only)
 @app.get("/test/errors")
 async def test_errors_page(request: Request):
