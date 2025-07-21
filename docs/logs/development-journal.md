@@ -1,3 +1,22 @@
+## 2025-07-21 – Dev Log #13: Archive System UI Fixes & Template Consolidation
+
+### Focus
+Fix archive button visibility issues and consolidate entry card templates for consistent design across All Entries and Archive pages.
+
+### Progress
+- Resolved archive button invisibility caused by CSS conflict (white text on white background with orange classes)
+- Fixed button visibility with purple background and inline CSS styling override
+- Created shared entry card template (templates/partials/entry_card.html) for design consistency
+- Removed action buttons from cards, centralized all operations to "View Full Entry" workflow
+- Fixed button alignment and sizing to maintain single-line layout in entry detail view
+- Changed archive page scoring from /10 to /5 for consistency across application
+- Improved template architecture with reusable components
+
+### Next Steps
+- Commit current template fixes and improvements
+- Begin implementation of Draft System & Auto-save functionality
+- Complete final testing of archive system end-to-end workflow
+
 ## 2025-07-21 – Dev Log #12: Dynamic UI & Progressive Field System
 
 ### Focus

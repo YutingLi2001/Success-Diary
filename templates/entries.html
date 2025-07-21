@@ -140,55 +140,12 @@
           </div>
 
           <!-- Entries Grid -->
-          <div class="grid gap-3">
+          <div class="grid gap-6">
             {% for entry in period_data.entries %}
-            <a href="/entries/{{ entry.id }}/view" class="entry-card block bg-white border border-gray-200 rounded-lg hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-               data-date="{{ entry.entry_date }}" data-content="{{ entry.success_1 }} {{ entry.success_2 or '' }} {{ entry.success_3 or '' }} {{ entry.gratitude_1 }} {{ entry.gratitude_2 or '' }} {{ entry.gratitude_3 or '' }} {{ entry.anxiety_1 }} {{ entry.anxiety_2 or '' }} {{ entry.anxiety_3 or '' }}">
-              
-              <!-- Header -->
-              <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-4 rounded-t-lg">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                  <div class="flex flex-col">
-                    <div class="font-semibold text-gray-800 text-base md:text-lg">
-                      {% if entry.title %}
-                        {{ entry.title }}
-                      {% else %}
-                        <script>
-                          document.write(window.EntryTitles ? window.EntryTitles.generateAutoTitle('{{ entry.entry_date }}') : '{{ entry.entry_date.strftime('%B %d, %Y') }}');
-                        </script>
-                      {% endif %}
-                    </div>
-                    <div class="text-sm text-gray-600">{{ entry.entry_date.strftime('%A, %B %d, %Y') }}</div>
-                    {% if entry.was_edited %}
-                      <div class="text-xs text-gray-500 mt-1">
-                        Created: {{ format_user_timestamp(user, entry.created_at, 'short') }} • 
-                        Edited: {{ format_user_timestamp(user, entry.updated_at, 'short') }}
-                      </div>
-                    {% else %}
-                      <div class="text-xs text-gray-500 mt-1">
-                        Created: {{ format_user_timestamp(user, entry.created_at, 'short') }}
-                      </div>
-                    {% endif %}
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <span class="bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full text-sm font-medium">{{ entry.score }}/5</span>
-                    {% if entry.score >= 4 %}
-                      <span class="text-lg">😊</span>
-                    {% elif entry.score >= 3 %}
-                      <span class="text-lg">😐</span>
-                    {% else %}
-                      <span class="text-lg">😔</span>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-              <!-- Preview Content -->
-              <div class="p-4">
-                <div class="text-gray-700 text-sm">
-                  ✨ {{ entry.success_1[:60] }}{% if entry.success_1|length > 60 %}...{% endif %}
-                </div>
-              </div>
-            </a>
+            <div class="entry-card" data-date="{{ entry.entry_date }}" data-content="{{ entry.success_1 }} {{ entry.success_2 or '' }} {{ entry.success_3 or '' }} {{ entry.gratitude_1 }} {{ entry.gratitude_2 or '' }} {{ entry.gratitude_3 or '' }} {{ entry.anxiety_1 }} {{ entry.anxiety_2 or '' }} {{ entry.anxiety_3 or '' }}">
+              {% set action_type = 'edit' %}
+              {% include 'partials/entry_card.html' %}
+            </div>
             {% endfor %}
           </div>
         </div>
