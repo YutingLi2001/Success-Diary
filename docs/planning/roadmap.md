@@ -119,12 +119,6 @@ SuccessDiary is a lightweight daily logging application designed for personal gr
   - [x] ✅ Create shared entry card template for design consistency
   - [x] ✅ Centralize operations to "View Full Entry" workflow
 
-### **Draft System & Auto-save** (depends on: entry editing, form validation)
-- **Implementation Tasks**:
-  - [ ] Add `is_draft` field to entry model
-  - [ ] Implement auto-save every 30 seconds
-  - [ ] Create draft API endpoints: `/entries/draft`, `/entries/finalize`, `/entries/today/draft`
-  - [ ] Test one-entry-per-day rule applies only to finalized entries
 
 ### **User Feedback Systems** (depends on: all core features)
 - **Implementation Tasks**:

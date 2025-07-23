@@ -87,7 +87,7 @@
           
           <!-- Primary Action Button -->
           {% if existing_entry_today %}
-            <a href="/entries/{{ existing_entry_today.id }}" 
+            <a href="/entries/{{ existing_entry_today.id }}/view" 
                class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition duration-200 shadow-sm hover:shadow-md min-h-[44px] w-full xs:w-auto">
               <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -114,51 +114,9 @@
       </div>
       <div class="space-y-3">
         {% for e in entries %}
-          <a href="/entries/{{ e.id }}/view" class="block bg-white border border-gray-200 rounded-lg hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-4 rounded-t-lg">
-              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                <div class="flex flex-col">
-                  <div class="font-semibold text-gray-800 text-base md:text-lg">
-                    {% if e.title %}
-                      {{ e.title }}
-                    {% else %}
-                      <script>
-                        document.write(window.EntryTitles ? window.EntryTitles.generateAutoTitle('{{ e.entry_date }}') : '{{ e.entry_date.strftime('%B %d, %Y') }}');
-                      </script>
-                    {% endif %}
-                  </div>
-                  <div class="text-sm text-gray-600">{{ e.entry_date.strftime('%A, %B %d, %Y') }}</div>
-                  {% if e.was_edited %}
-                    <div class="text-xs text-gray-500 mt-1">
-                      Created: {{ format_user_timestamp(user, e.created_at, 'short') }} • 
-                      Edited: {{ format_user_timestamp(user, e.updated_at, 'short') }}
-                    </div>
-                  {% else %}
-                    <div class="text-xs text-gray-500 mt-1">
-                      Created: {{ format_user_timestamp(user, e.created_at, 'short') }}
-                    </div>
-                  {% endif %}
-                </div>
-                <div class="flex items-center gap-3">
-                  <span class="bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full text-sm font-medium">{{ e.score }}/5</span>
-                  {% if e.score >= 4 %}
-                    <span class="text-lg">😊</span>
-                  {% elif e.score >= 3 %}
-                    <span class="text-lg">😐</span>
-                  {% else %}
-                    <span class="text-lg">😔</span>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-            <!-- Preview Content -->
-            <div class="p-4">
-              <div class="text-gray-700 text-sm">
-                ✨ {{ e.success_1[:60] }}{% if e.success_1|length > 60 %}...{% endif %}
-              </div>
-            </div>
-          </a>
+          {% set entry = e %}
+          {% set action_type = 'view' %}
+          {% include 'partials/entry_card.html' %}
         {% else %}
           <div class="text-gray-500 text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
             <div class="text-4xl mb-4">📝</div>

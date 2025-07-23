@@ -223,3 +223,20 @@ Establish project vision and core planning documents.
 ### Next Steps
 - Finalize tech stack details
 - Set up initial project structure
+
+## 2025-01-23 – Dev Log #4: UI Consistency & Template Standardization
+
+### Focus
+Complete UI consistency across all pages with unified navigation, entry cards, and edit workflows.
+
+### Progress
+- Fixed navigation consistency: Added Archive menu to Analytics and Settings pages
+- Unified entry card design: Implemented gradient headers with purple score badges across all pages
+- Cleaned entry card visuals: Removed mood emojis and success preview for professional appearance  
+- Resolved edit workflow inconsistency: Dashboard and All Entries now use identical view-first pattern
+- Removed Draft System from roadmap: Eliminated bug-prone, low-impact feature with zero code dependencies
+- Created comprehensive ADR documentation: Recorded all UI decisions and draft system removal rationale
+
+### Next Steps
+- Resume MVP 1.0 core feature development with solid UI foundation
+- Continue toward production deployment preparation
