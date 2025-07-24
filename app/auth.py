@@ -12,7 +12,7 @@ from fastapi_users.db import SQLAlchemyUserDatabase
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from httpx_oauth.clients.google import GoogleOAuth2
 from httpx_oauth.clients.github import GitHubOAuth2
-from sqlmodel import Session
+from sqlalchemy import update
 from app.models import User, UserCreate
 from app.database import get_async_session
 import os
@@ -55,6 +55,9 @@ async def get_user_db(session = Depends(get_async_session)):
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
+
+
+    # Using default FastAPI-Users reset_password implementation - no custom override needed
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
@@ -145,6 +148,65 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
         self, user: User, token: str, request: Optional[Request] = None
     ):
         print(f"User {user.id} has forgot their password. Reset token: {token}")
+        
+        # Send password reset email
+        reset_link = f"http://localhost:8000/auth/reset-password?token={token}"
+        
+        message = MessageSchema(
+            subject="Success Diary - Password Reset",
+            recipients=[user.email],
+            body=f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="color: #10b981;">Password Reset Request</h1>
+                    </div>
+                    
+                    <div style="background-color: #f9fafb; padding: 30px; border-radius: 12px;">
+                        <p style="color: #374151; margin-bottom: 20px;">Hi {user.display_name or user.email.split('@')[0]},</p>
+                        
+                        <p style="color: #374151; margin-bottom: 20px;">
+                            We received a request to reset the password for your Success Diary account. 
+                            If you didn't make this request, you can safely ignore this email.
+                        </p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{reset_link}" 
+                               style="display: inline-block; background-color: #3b82f6; color: white; 
+                                      padding: 15px 30px; text-decoration: none; border-radius: 8px; 
+                                      font-weight: bold; font-size: 16px;">
+                                Reset My Password
+                            </a>
+                        </div>
+                        
+                        <p style="color: #6b7280; font-size: 14px; margin-bottom: 10px;">
+                            Or copy and paste this link in your browser:
+                        </p>
+                        <p style="color: #3b82f6; font-size: 14px; word-break: break-all; 
+                                  background-color: #f3f4f6; padding: 10px; border-radius: 4px;">
+                            {reset_link}
+                        </p>
+                        
+                        <p style="color: #ef4444; font-size: 14px; margin-top: 20px;">
+                            ⏰ This link will expire in 1 hour for security reasons.
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px; color: #6b7280; font-size: 12px;">
+                        <p>If you have any questions, please contact our support team.</p>
+                        <p>© Success Diary - Your personal growth companion</p>
+                    </div>
+                </body>
+            </html>
+            """,
+            subtype="html"
+        )
+        
+        try:
+            await fastmail.send_message(message)
+            print(f"Password reset email sent to {user.email}")
+        except Exception as e:
+            print(f"Failed to send password reset email to {user.email}: {e}")
 
     async def on_after_request_verify(
         self, user: User, token: str, request: Optional[Request] = None
