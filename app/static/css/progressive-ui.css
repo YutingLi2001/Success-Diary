@@ -127,3 +127,18 @@ textarea.at-limit:focus {
         display: none !important;
     }
 }
+
+/* Unsaved changes indicator */
+button[data-unsaved="true"]::after {
+    content: " *";
+    color: #f59e0b !important; /* Amber-500 to match orange button - !important to override Tailwind */
+    font-weight: 600;
+    margin-left: 0.125rem;
+}
+
+/* Ensure button text doesn't overflow */
+button[type="submit"] {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

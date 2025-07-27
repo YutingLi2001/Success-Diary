@@ -5,10 +5,11 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 from pathlib import Path
+from pydantic import BaseModel
 from app.database import engine, init_db, get_session
-from app.models import Entry, EntryUpdate, EntryRead, User, UserCreate, UserRead, UserUpdate, ArchiveRequest
+from app.models import Entry, EntryUpdate, EntryRead, User, UserCreate, UserRead, UserUpdate, ArchiveRequest, UserFeedback, UserFeedbackCreate
 from app.timezone_utils import get_user_local_date, format_user_timestamp, get_user_date_range
-from app.auth import auth_backend, fastapi_users, current_active_user, current_verified_user, google_oauth_router, github_oauth_router
+from app.auth import auth_backend, fastapi_users, current_active_user, current_verified_user, google_oauth_router, github_oauth_router, get_user_manager
 from fastapi.templating import Jinja2Templates
 
 # Import error handling system
@@ -44,6 +45,7 @@ app.include_router(
     prefix="/auth",
     tags=["auth"],
 )
+# Enable default reset password router for testing
 app.include_router(
     fastapi_users.get_reset_password_router(),
     prefix="/auth",
@@ -190,6 +192,23 @@ def login_page(request: Request):
 def register_page(request: Request):
     return templates.TemplateResponse("auth/register.html", {"request": request})
 
+
+# Custom HTML page for forgot password (the form)
+@app.get("/auth/forgot-password", response_class=HTMLResponse)
+def forgot_password_page(request: Request):
+    return templates.TemplateResponse("auth/forgot-password.html", {"request": request})
+
+# Note: The POST /auth/forgot-password endpoint is handled by the default FastAPI-Users router
+# We just need to update the frontend to work with the default API response
+
+
+@app.get("/auth/reset-password", response_class=HTMLResponse)
+def reset_password_page(request: Request):
+    return templates.TemplateResponse("auth/reset-password.html", {"request": request})
+
+
+# Using default FastAPI-Users reset password router - no custom endpoint needed
+
 @app.get("/entries", response_class=HTMLResponse)
 async def entries_page(request: Request, db: Session = Depends(get_session)):
     user = await get_current_user_safe(request)
@@ -217,7 +236,8 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
     
     # Calculate statistics
     total_entries = len(entries)
-    avg_score = sum(e.score for e in entries) / total_entries if entries else 0
+    scores = [e.score for e in entries if e.score is not None]
+    avg_score = sum(scores) / len(scores) if scores else 0
     
     # Group entries by year and month
     from collections import defaultdict
@@ -245,12 +265,13 @@ async def entries_page(request: Request, db: Session = Depends(get_session)):
         
         # Sort entries within each period according to user preference
         reverse_sort = sort_preference != 'oldest_first'
+        period_scores = [e.score for e in period_entries if e.score is not None]
         periods_list.append({
             'year': year,
             'month': month,
             'month_name': calendar.month_name[int(month)],
             'entries': sorted(period_entries, key=lambda x: x.entry_date, reverse=reverse_sort),
-            'avg_score': sum(e.score for e in period_entries) / len(period_entries)
+            'avg_score': sum(period_scores) / len(period_scores) if period_scores else 0
         })
     
     # Calculate unique months and streak (simplified)
@@ -526,6 +547,42 @@ def can_create_entry_today(user: User, db: Session) -> bool:
     return existing_entry is None
 
 
+def get_entry_form_context(entry=None, is_edit=False, user=None):
+    """
+    Standardized context for entry forms (both create and edit)
+    
+    Args:
+        entry: Entry object for edit mode, None for create mode
+        is_edit: Boolean indicating if this is edit mode
+        user: User object for template context
+    
+    Returns:
+        dict: Standardized template context
+    """
+    from datetime import date
+    
+    # Create empty entry structure for new entries
+    if not entry and not is_edit:
+        entry = type('Entry', (), {
+            'id': None,
+            'title': '',
+            'success_1': '', 'success_2': '', 'success_3': '',
+            'gratitude_1': '', 'gratitude_2': '', 'gratitude_3': '',
+            'anxiety_1': '', 'anxiety_2': '', 'anxiety_3': '',
+            'journal': '',
+            'score': None,
+            'entry_date': date.today()
+        })()
+    
+    return {
+        'edit_mode': is_edit,
+        'is_new': not is_edit,
+        'entry': entry,
+        'action_url': f'/entries/{entry.id}' if is_edit and entry and entry.id else '/add',
+        'user': user
+    }
+
+
 @app.post("/add")
 async def add_entry(
     request: Request,
@@ -539,8 +596,9 @@ async def add_entry(
     anxiety_1: str = Form(...),
     anxiety_2: str = Form(""),
     anxiety_3: str = Form(""),
-    score: int = Form(...),
+    score: int | None = Form(None),
     journal: str = Form(""),
+    entry_date: str = Form(None),
     db: Session = Depends(get_session),
 ):
     # Get the current user using our safe method
@@ -562,15 +620,23 @@ async def add_entry(
     
     print(f"Refreshed user timezone data: detected={db_user.last_detected_timezone}, legacy={db_user.timezone}")
     
-    # Check one-entry-per-day constraint
-    if not can_create_entry_today(db_user, db):
-        today_local = get_user_local_date(db_user)
-        existing_entry = get_entry_for_date(db_user, today_local, db)
-        
+    # Determine entry date
+    if entry_date:
+        from datetime import datetime
+        try:
+            target_date = datetime.strptime(entry_date, "%Y-%m-%d").date()
+        except ValueError:
+            target_date = get_user_local_date(db_user)
+    else:
+        target_date = get_user_local_date(db_user)
+    
+    # Check one-entry-per-day constraint for the target date
+    existing_entry = get_entry_for_date(db_user, target_date, db)
+    if existing_entry:
         # Return error with link to existing entry
         if request.headers.get("HX-Request"):
             return HTMLResponse(
-                f'<div class="error-message">You already created an entry for {today_local.strftime("%B %d, %Y")}. '
+                f'<div class="error-message">You already created an entry for {target_date.strftime("%B %d, %Y")}. '
                 f'<a href="/entries/{existing_entry.id}" class="text-blue-600 hover:text-blue-800">View/Edit Entry</a></div>'
             )
         else:
@@ -579,7 +645,7 @@ async def add_entry(
     
     entry = Entry(
         user_id=str(user.id),
-        entry_date=get_user_local_date(db_user),  # Use refreshed user object
+        entry_date=target_date,
         title=title if title.strip() else None,
         success_1=success_1,
         success_2=success_2 if success_2.strip() else None,
@@ -598,7 +664,7 @@ async def add_entry(
     
     # Show success message for HTMX requests
     if request.headers.get("HX-Request"):
-        return HTMLResponse('<div class="success-message">Entry saved successfully!</div>')
+        return HTMLResponse('<div class="success-message">Today\'s journal has been saved</div>')
     
     return RedirectResponse("/", status_code=303)
 
@@ -616,7 +682,7 @@ async def update_entry(
     anxiety_1: str = Form(""),
     anxiety_2: str = Form(""),
     anxiety_3: str = Form(""),
-    score: int = Form(...),
+    score: int | None = Form(None),
     journal: str = Form(""),
     db: Session = Depends(get_session),
 ):
@@ -648,9 +714,9 @@ async def update_entry(
     update_data["anxiety_3"] = anxiety_3.strip() if anxiety_3.strip() else None
     update_data["journal"] = journal.strip() if journal.strip() else None
     
-    # Validate score
-    if score < 1 or score > 10:
-        raise HTTPException(status_code=400, detail="Score must be between 1 and 10")
+    # Validate score (allow None for skip option)
+    if score is not None and (score < 1 or score > 5):
+        raise HTTPException(status_code=400, detail="Score must be between 1 and 5")
     update_data["score"] = score
     
     # Apply updates
@@ -765,7 +831,8 @@ async def archive_page(request: Request, db: Session = Depends(get_session)):
     
     # Calculate statistics
     total_archived = len(entries)
-    avg_score = sum(e.score for e in entries) / total_archived if entries else 0
+    archived_scores = [e.score for e in entries if e.score is not None]
+    avg_score = sum(archived_scores) / len(archived_scores) if archived_scores else 0
     
     return templates.TemplateResponse("archive.html", {
         "request": request,
@@ -804,6 +871,53 @@ async def view_entry(
         "format_user_timestamp": format_user_timestamp
     })
 
+@app.get("/entries/new", response_class=HTMLResponse)
+async def new_entry(
+    request: Request,
+    date: str = None,
+    db: Session = Depends(get_session)
+):
+    """Create a new entry form"""
+    # Get the current user
+    user = await get_current_user_safe(request)
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    
+    if not user.is_verified:
+        return RedirectResponse("/verify?email=" + user.email, status_code=303)
+    
+    # Parse date parameter or use today
+    from datetime import datetime, date as date_type
+    db_user = db.query(User).filter(User.id == user.id).first()
+    
+    if date:
+        try:
+            entry_date = datetime.strptime(date, "%Y-%m-%d").date()
+        except ValueError:
+            entry_date = get_user_local_date(db_user)
+    else:
+        entry_date = get_user_local_date(db_user)
+    
+    # Check if entry already exists for this date
+    existing_entry = get_entry_for_date(db_user, entry_date, db)
+    if existing_entry:
+        return RedirectResponse(f"/entries/{existing_entry.id}", status_code=303)
+    
+    # Create standardized context for new entry
+    context = get_entry_form_context(entry=None, is_edit=False, user=user)
+    
+    # Override entry_date if specified
+    if context['entry']:
+        context['entry'].entry_date = entry_date
+    
+    context.update({
+        "request": request,
+        "format_user_timestamp": format_user_timestamp
+    })
+    
+    return templates.TemplateResponse("edit_entry.html", context)
+
+
 @app.get("/entries/{entry_id}", response_class=HTMLResponse)
 async def get_entry(
     entry_id: int,
@@ -824,12 +938,12 @@ async def get_entry(
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
     
-    return templates.TemplateResponse("edit_entry.html", {
+    context = get_entry_form_context(entry=entry, is_edit=True, user=user)
+    context.update({
         "request": request,
-        "user": user,
-        "entry": entry,
         "format_user_timestamp": format_user_timestamp
     })
+    return templates.TemplateResponse("edit_entry.html", context)
 
 
 @app.delete("/entries/{entry_id}")
@@ -959,3 +1073,75 @@ async def get_validation_config(form_type: str):
     """Get validation configuration for client-side JavaScript."""
     config = get_client_validation_config(form_type)
     return {"config": config}
+
+
+@app.post("/entries/today")
+async def create_today_entry(
+    request: Request,
+    db: Session = Depends(get_session)
+):
+    """Create today's entry and redirect to edit mode."""
+    # Get the current user
+    user = await get_current_user_safe(request)
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    
+    if not user.is_verified:
+        return RedirectResponse("/verify?email=" + user.email, status_code=303)
+    
+    # Refresh user from sync database
+    db_user = db.query(User).filter(User.id == user.id).first()
+    if not db_user:
+        return RedirectResponse("/login", status_code=303)
+    
+    # Check if entry already exists for today
+    today_local = get_user_local_date(db_user)
+    existing_entry = get_entry_for_date(db_user, today_local, db)
+    
+    if existing_entry:
+        # Redirect to edit existing entry
+        return RedirectResponse(f"/entries/{existing_entry.id}", status_code=303)
+    
+    # Redirect to create new entry page with today's date
+    # Don't create empty entry in database - let the form handle it
+    return RedirectResponse(f"/entries/new?date={today_local}", status_code=303)
+
+
+@app.post("/feedback")
+async def submit_feedback(
+    request: Request,
+    db: Session = Depends(get_session)
+):
+    """Submit user feedback for product improvement."""
+    # Get the current user
+    user = await get_current_user_safe(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    if not user.is_verified:
+        raise HTTPException(status_code=403, detail="User not verified")
+    
+    try:
+        # Parse JSON body
+        body = await request.json()
+        
+        # Create feedback entry
+        feedback = UserFeedback(
+            user_id=str(user.id),
+            working_well=body.get("working_well", "").strip() or None,
+            needs_improvement=body.get("needs_improvement", "").strip() or None,
+            feature_request=body.get("feature_request", "").strip() or None,
+            app_version=body.get("app_version"),
+            user_agent=body.get("user_agent")
+        )
+        
+        db.add(feedback)
+        db.commit()
+        
+        print(f"Feedback submitted by user {user.email}")
+        return {"status": "success", "message": "Thank you for your feedback!"}
+        
+    except Exception as e:
+        print(f"Error submitting feedback: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to submit feedback")

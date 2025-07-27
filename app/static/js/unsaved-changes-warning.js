@@ -88,13 +88,11 @@ class UnsavedChangesWarning {
             if (this.hasUnsavedChanges) {
                 submitButton.classList.add('bg-orange-600', 'hover:bg-orange-700');
                 submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                if (!submitButton.textContent.includes('*')) {
-                    submitButton.textContent = submitButton.textContent + ' *';
-                }
+                submitButton.setAttribute('data-unsaved', 'true');
             } else {
                 submitButton.classList.remove('bg-orange-600', 'hover:bg-orange-700');
                 submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                submitButton.textContent = submitButton.textContent.replace(' *', '');
+                submitButton.removeAttribute('data-unsaved');
             }
         }
     }

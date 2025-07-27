@@ -59,7 +59,15 @@
       "Bash(gh pr create:*)",
       "Bash(scripts\\windows\\reset-db.bat)",
       "Bash(curl:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(./scripts/mac/quick-start.sh:*)",
+      "Bash(source venv/bin/activate)",
+      "Bash(python -c \"from app.main import app; print(''App loaded successfully'')\")",
+      "Bash(./scripts/mac/dev-start-with-email.sh:*)",
+      "Bash(./scripts/mac/dev-setup.command:*)",
+      "Bash(./scripts/mac/utilities/reset-db.command:*)",
+      "Bash(./scripts/mac/server-start.command:*)",
+      "Bash(pgrep:*)"
     ],
     "deny": []
   }

@@ -63,10 +63,19 @@
     <div class="bg-white rounded-lg shadow-sm border p-4 md:p-6 mb-6 md:mb-8">
       {% if can_create_today %}
         <h2 class="text-xl font-semibold mb-4 text-gray-800">Today's Entry</h2>
+        <p class="text-gray-600 mb-6">Ready to reflect on your day? Create today's entry to start journaling.</p>
         
-        {% set edit_mode = false %}
-        {% set entry = none %}
-        {% include 'shared/entry_form.html' %}
+        <!-- Create Today's Entry Button -->
+        <div class="text-center">
+          <form action="/entries/today" method="post">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition duration-200 shadow-sm hover:shadow-md min-h-[44px] inline-flex items-center gap-3">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              Create Today's Entry
+            </button>
+          </form>
+        </div>
       {% else %}
         <!-- Entry Complete Success Card -->
         <div class="text-center py-8">
@@ -87,12 +96,12 @@
           
           <!-- Primary Action Button -->
           {% if existing_entry_today %}
-            <a href="/entries/{{ existing_entry_today.id }}/view" 
+            <a href="/entries/{{ existing_entry_today.id }}" 
                class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition duration-200 shadow-sm hover:shadow-md min-h-[44px] w-full xs:w-auto">
               <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
               </svg>
-              View & Edit Today's Entry
+              Edit Today's Entry
             </a>
           {% endif %}
           

@@ -22,6 +22,8 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     entry_sort_preference: str = Column(String(20), nullable=False, default="newest_first")  # 'newest_first' | 'oldest_first'
     verification_code: Optional[str] = Column(String(6), nullable=True)
     verification_code_expires: Optional[datetime] = Column(DateTime, nullable=True)
+    # Password reuse prevention - store last 3 password hashes
+    previous_password_hashes: Optional[str] = Column(String(500), nullable=True)  # JSON array of recent hashes
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
     display_name: Optional[str]
@@ -59,7 +61,7 @@ class Entry(SQLModel, table=True):
     anxiety_1: str
     anxiety_2: str | None = Field(default=None)
     anxiety_3: str | None = Field(default=None)
-    score: int
+    score: int | None = Field(default=None)
     journal: str | None = Field(default=None)  # Free-form reflection field
     
     # Archive system fields
@@ -100,8 +102,8 @@ class EntryUpdate(SQLModel):
     
     @validator('score')
     def validate_score(cls, v):
-        if v is not None and (v < 1 or v > 10):
-            raise ValueError('Score must be between 1 and 10')
+        if v is not None and (v < 1 or v > 5):
+            raise ValueError('Score must be between 1 and 5')
         return v
 
 class EntryRead(SQLModel):
@@ -121,7 +123,7 @@ class EntryRead(SQLModel):
     anxiety_1: str
     anxiety_2: str | None
     anxiety_3: str | None
-    score: int
+    score: int | None
     journal: str | None
     
     # Archive system fields
@@ -142,3 +144,26 @@ class EntryRead(SQLModel):
 class ArchiveRequest(SQLModel):
     """Model for archive operation requests"""
     reason: str | None = None  # Optional categorization: emotional_content, outdated, personal, seasonal, custom
+
+class UserFeedback(SQLModel, table=True):
+    """User feedback collection for product improvement"""
+    __tablename__ = "user_feedback"
+    
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: str
+    working_well: str | None = Field(default=None, max_length=500)
+    needs_improvement: str | None = Field(default=None, max_length=500)
+    feature_request: str | None = Field(default=None, max_length=300)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Metadata for analytics
+    app_version: str | None = Field(default=None, max_length=20)
+    user_agent: str | None = Field(default=None, max_length=500)
+
+class UserFeedbackCreate(SQLModel):
+    """Model for creating user feedback"""
+    working_well: str | None = None
+    needs_improvement: str | None = None
+    feature_request: str | None = None
+    app_version: str | None = None
+    user_agent: str | None = None
